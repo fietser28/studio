@@ -221,7 +221,7 @@ export function expressionPropertyBuildTickSpecific<T extends LVGLWidget>(
     getFunc: string,
     setFunc: string,
     setFuncOptArgs?: string,
-    range?: "min" | "max",
+    range?: "min" | "max" | "count" | "position",
     checkStateEdited?: boolean
 ) {
     if (getProperty(widget, propName + "Type") == "expression") {
@@ -387,6 +387,18 @@ export function expressionPropertyBuildTickSpecific<T extends LVGLWidget>(
             ) {
                 build.line(`lv_spinbox_t* spinbox = (lv_spinbox_t *) ${objectAccessor};`);
                 build.line(`uint32_t cur_val = spinbox->range_${range};`)
+            } else if (
+                widget instanceof ProjectEditor.LVGLSpinboxWidgetClass &&
+                propName == "digitCount"
+            ) {
+                build.line(`lv_spinbox_t* spinbox = (lv_spinbox_t *) ${objectAccessor};`);
+                build.line(`uint32_t cur_val = spinbox->digit_count;`)
+            } else if (
+                widget instanceof ProjectEditor.LVGLSpinboxWidgetClass &&
+                propName == "separatorPosition"
+            ) {
+                build.line(`lv_spinbox_t* spinbox = (lv_spinbox_t *) ${objectAccessor};`);
+                build.line(`uint32_t cur_val = spinbox->dec_point_pos;`)
             } else {
                 build.line(`int32_t cur_val = ${getFunc}(${objectAccessor});`);
             }
@@ -427,6 +439,22 @@ export function expressionPropertyBuildTickSpecific<T extends LVGLWidget>(
                 build.line("if (min < max) {");
                 build.indent();
                 build.line(`lv_spinbox_set_range(${objectAccessor}, min, max);`);
+                build.unindent();
+                build.line("}");
+            } else if (
+                (range == "count" || range == "position") &&
+                widget instanceof ProjectEditor.LVGLSpinboxWidgetClass
+            ) {
+                if (range == "count") {
+                    build.line("int32_t pos = spinbox->dec_point_pos;");
+                    build.line("int32_t count = new_val;");
+                } else if (range == "position") {
+                    build.line("int32_t count = spinbox->digit_count;");
+                    build.line("int32_t pos = new_val;");
+                }
+                build.line("if (count >= pos) {");
+                build.indent();
+                build.line(`lv_spinbox_set_digit_format(${objectAccessor}, count, pos);`);
                 build.unindent();
                 build.line("}");
             } else {

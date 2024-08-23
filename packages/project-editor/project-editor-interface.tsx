@@ -102,7 +102,7 @@ import type { PropertyInfo } from "project-editor/core/object";
 import type { migrateLvglVersion } from "project-editor/lvgl/migrate";
 import type { FlowTabState } from "project-editor/flow/flow-tab-state";
 import type { Color } from "project-editor/features/style/theme";
-import { LVGLSpinboxWidget } from "./lvgl/widgets/Spinbox";
+import type { LVGLSpinboxWidget } from "./lvgl/widgets/Spinbox";
 
 export interface IProjectEditor {
     homeTabs?: Tabs;

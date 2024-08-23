@@ -520,6 +520,8 @@ export const LV_EVENT_SPINBOX_VALUE_CHANGED = 0x7c;
 export const LV_EVENT_SPINBOX_STEP_CHANGED = 0x7d;
 export const LV_EVENT_SPINBOX_MIN_CHANGED = 0x7e;
 export const LV_EVENT_SPINBOX_MAX_CHANGED = 0x7f;
+export const LV_EVENT_SPINBOX_DIGIT_COUNTER_CHANGED = 0x80;
+export const LV_EVENT_SPINBOX_SEP_POS_CHANGED = 0x81;
 
 ////////////////////////////////////////////////////////////////////////////////
 
