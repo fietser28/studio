@@ -518,6 +518,8 @@ export const LV_EVENT_SLIDER_VALUE_CHANGED = 0x7a;
 export const LV_EVENT_SLIDER_VALUE_LEFT_CHANGED = 0x7b;
 export const LV_EVENT_SPINBOX_VALUE_CHANGED = 0x7c;
 export const LV_EVENT_SPINBOX_STEP_CHANGED = 0x7d;
+export const LV_EVENT_SPINBOX_MIN_CHANGED = 0x7e;
+export const LV_EVENT_SPINBOX_MAX_CHANGED = 0x7f;
 
 ////////////////////////////////////////////////////////////////////////////////
 

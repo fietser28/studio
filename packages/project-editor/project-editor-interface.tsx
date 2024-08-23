@@ -82,7 +82,8 @@ import type {
     LVGLTabWidget,
     LVGLRollerWidget,
     LVGLButtonMatrixWidget,
-    LVGLLedWidget
+    LVGLLedWidget,
+    LVGLArcWidget
 } from "project-editor/lvgl/widgets";
 import type { LVGLStyle } from "project-editor/lvgl/style";
 import type { Property } from "project-editor/ui-components/PropertyGrid/Property";
@@ -101,6 +102,7 @@ import type { PropertyInfo } from "project-editor/core/object";
 import type { migrateLvglVersion } from "project-editor/lvgl/migrate";
 import type { FlowTabState } from "project-editor/flow/flow-tab-state";
 import type { Color } from "project-editor/features/style/theme";
+import { LVGLSpinboxWidget } from "./lvgl/widgets/Spinbox";
 
 export interface IProjectEditor {
     homeTabs?: Tabs;
@@ -148,6 +150,8 @@ export interface IProjectEditor {
     LVGLButtonMatrixWidgetClass: typeof LVGLButtonMatrixWidget;
     LVGLLedWidgetClass: typeof LVGLLedWidget;
     LVGLStyleClass: typeof LVGLStyle;
+    LVGLArcWidgetClass: typeof LVGLArcWidget;
+    LVGLSpinboxWidgetClass: typeof LVGLSpinboxWidget;
     getProject: typeof getProject;
     getProjectStore: typeof getProjectStore;
     getFlow: typeof getFlow;

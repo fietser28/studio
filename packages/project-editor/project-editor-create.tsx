@@ -80,7 +80,8 @@ import {
     LVGLTabWidget,
     LVGLRollerWidget,
     LVGLButtonMatrixWidget,
-    LVGLLedWidget
+    LVGLLedWidget,
+    LVGLArcWidget
 } from "project-editor/lvgl/widgets";
 
 import { Bitmap, getBitmapData } from "project-editor/features/bitmap/bitmap";
@@ -121,6 +122,7 @@ import { evalProperty } from "project-editor/flow/helper";
 import { migrateLvglVersion } from "./lvgl/migrate";
 import { FlowTabState } from "project-editor/flow/flow-tab-state";
 import { Color } from "project-editor/features/style/theme";
+import { LVGLSpinboxWidget } from "./lvgl/widgets/Spinbox";
 
 export const conditionalStyleConditionProperty = makeExpressionProperty(
     {
@@ -196,6 +198,8 @@ export async function createProjectEditor(
         LVGLButtonMatrixWidgetClass: LVGLButtonMatrixWidget,
         LVGLLedWidgetClass: LVGLLedWidget,
         LVGLStyleClass: LVGLStyle,
+        LVGLArcWidgetClass: LVGLArcWidget,
+        LVGLSpinboxWidgetClass: LVGLSpinboxWidget,
         getProject,
         getProjectStore,
         getFlow,

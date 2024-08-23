@@ -54,13 +54,13 @@ const LVGLProperty = observer(
                 propertyInfoType = propertyInfo.colorEditorForLiteral
                     ? PropertyType.Color
                     : propertyInfo.expressionType == "integer"
-                    ? PropertyType.Number
-                    : propertyInfo.expressionType == "string" ||
-                      propertyInfo.expressionType == "array:string"
-                    ? PropertyType.MultilineText
-                    : propertyInfo.expressionType == "boolean"
-                    ? PropertyType.Boolean
-                    : propertyInfo.type;
+                        ? PropertyType.Number
+                        : propertyInfo.expressionType == "string" ||
+                            propertyInfo.expressionType == "array:string"
+                            ? PropertyType.MultilineText
+                            : propertyInfo.expressionType == "boolean"
+                                ? PropertyType.Boolean
+                                : propertyInfo.type;
             }
 
             let referencedObjectCollectionPath =
@@ -94,19 +94,19 @@ const LVGLProperty = observer(
                 onSelect:
                     type == "expression"
                         ? (
-                              object: IEezObject,
-                              propertyInfo: PropertyInfo,
-                              params: IOnSelectParams
-                          ) =>
-                              expressionBuilder(
-                                  object,
-                                  propertyInfo,
-                                  {
-                                      assignableExpression: false,
-                                      title: "Expression Builder"
-                                  },
-                                  params
-                              )
+                            object: IEezObject,
+                            propertyInfo: PropertyInfo,
+                            params: IOnSelectParams
+                        ) =>
+                            expressionBuilder(
+                                object,
+                                propertyInfo,
+                                {
+                                    assignableExpression: false,
+                                    title: "Expression Builder"
+                                },
+                                params
+                            )
                         : undefined,
                 isOnSelectAvailable: () => {
                     return (
@@ -201,11 +201,11 @@ export function makeLvglExpressionProperty(
                             .hasFlowSupport && id == "expression"
                             ? "Variable"
                             : ProjectEditor.getProject(object).projectTypeTraits
-                                  .hasFlowSupport &&
-                              id == "expression" &&
-                              flowProperty == "assignable"
-                            ? "Assignable"
-                            : undefined
+                                .hasFlowSupport &&
+                                id == "expression" &&
+                                flowProperty == "assignable"
+                                ? "Assignable"
+                                : undefined
                 })),
             enumDisallowUndefined: true,
             propertyGridGroup: props.propertyGridGroup,
@@ -221,7 +221,7 @@ export function expressionPropertyBuildTickSpecific<T extends LVGLWidget>(
     getFunc: string,
     setFunc: string,
     setFuncOptArgs?: string,
-    arcRange?: "min" | "max",
+    range?: "min" | "max",
     checkStateEdited?: boolean
 ) {
     if (getProperty(widget, propName + "Type") == "expression") {
@@ -358,8 +358,7 @@ export function expressionPropertyBuildTickSpecific<T extends LVGLWidget>(
                 );
             } else {
                 build.line(
-                    `${setFunc}(${objectAccessor}, new_val${
-                        setFuncOptArgs ?? ""
+                    `${setFunc}(${objectAccessor}, new_val${setFuncOptArgs ?? ""
                     });`
                 );
             }
@@ -382,6 +381,12 @@ export function expressionPropertyBuildTickSpecific<T extends LVGLWidget>(
                         `uint32_t cur_val = lv_color_to32(((lv_led_t *)${objectAccessor})->color);`
                     );
                 }
+            } else if (
+                widget instanceof ProjectEditor.LVGLSpinboxWidgetClass &&
+                (propName == "min" || propName == "max")
+            ) {
+                build.line(`lv_spinbox_t* spinbox = (lv_spinbox_t *) ${objectAccessor};`);
+                build.line(`uint32_t cur_val = spinbox->range_${range};`)
             } else {
                 build.line(`int32_t cur_val = ${getFunc}(${objectAccessor});`);
             }
@@ -389,13 +394,15 @@ export function expressionPropertyBuildTickSpecific<T extends LVGLWidget>(
             build.line("if (new_val != cur_val) {");
             build.indent();
             build.line(`tick_value_change_obj = ${objectAccessor};`);
-            if (arcRange) {
-                if (arcRange == "min") {
+            if (range &&
+                widget instanceof ProjectEditor.LVGLArcWidgetClass
+            ) {
+                if (range == "min") {
                     build.line("int16_t min = new_val;");
                     build.line(
                         `int16_t max = lv_arc_get_max_value(${objectAccessor});`
                     );
-                } else if (arcRange == "max") {
+                } else if (range == "max") {
                     build.line(
                         `int16_t min = lv_arc_get_min_value(${objectAccessor});`
                     );
@@ -404,6 +411,22 @@ export function expressionPropertyBuildTickSpecific<T extends LVGLWidget>(
                 build.line("if (min < max) {");
                 build.indent();
                 build.line(`lv_arc_set_range(${objectAccessor}, min, max);`);
+                build.unindent();
+                build.line("}");
+            } else if (
+                (range == "min" || range == "max") &&
+                widget instanceof ProjectEditor.LVGLSpinboxWidgetClass
+            ) {
+                if (range == "min") {
+                    build.line("int32_t max = spinbox->range_max;");
+                    build.line("int32_t min = new_val;");
+                } else if (range == "max") {
+                    build.line("int32_t min = spinbox->range_min;");
+                    build.line("int32_t max = new_val;");
+                }
+                build.line("if (min < max) {");
+                build.indent();
+                build.line(`lv_spinbox_set_range(${objectAccessor}, min, max);`);
                 build.unindent();
                 build.line("}");
             } else {
@@ -416,8 +439,7 @@ export function expressionPropertyBuildTickSpecific<T extends LVGLWidget>(
                     );
                 } else {
                     build.line(
-                        `${setFunc}(${objectAccessor}, new_val${
-                            setFuncOptArgs ?? ""
+                        `${setFunc}(${objectAccessor}, new_val${setFuncOptArgs ?? ""
                         });`
                     );
                 }
