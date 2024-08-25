@@ -625,6 +625,32 @@ void flow_event_spinbox_step_changed_callback(lv_event_t *e) {
     }
 }
 
+void flow_event_spinbox_min_changed_callback(lv_event_t *e) {
+    lv_event_code_t event = lv_event_get_code(e);
+    if (event == LV_EVENT_VALUE_CHANGED) {
+        lv_obj_t *ta = lv_event_get_target_obj(e);
+        if (!g_updateTask || g_updateTask->obj != ta) {
+            FlowEventCallbackData *data = (FlowEventCallbackData *)e->user_data;
+            lv_spinbox_t* spinbox = (lv_spinbox_t *) ta;
+            int32_t value = ta->range_min;
+            assignIntegerProperty(data->flow_state, data->component_index, data->output_or_property_index, value, "Failed to assign Min in Spinbox widget");
+        }
+    }
+}
+
+void flow_event_spinbox_max_changed_callback(lv_event_t *e) {
+    lv_event_code_t event = lv_event_get_code(e);
+    if (event == LV_EVENT_VALUE_CHANGED) {
+        lv_obj_t *ta = lv_event_get_target_obj(e);
+        if (!g_updateTask || g_updateTask->obj != ta) {
+            FlowEventCallbackData *data = (FlowEventCallbackData *)e->user_data;
+            lv_spinbox_t* spinbox = (lv_spinbox_t *) ta;
+            int32_t value = ta->range_max;
+            assignIntegerProperty(data->flow_state, data->component_index, data->output_or_property_index, value, "Failed to assign Max in Spinbox widget");
+        }
+    }
+}
+
 void flow_event_checked_callback(lv_event_t *e) {
     lv_event_code_t event = lv_event_get_code(e);
     lv_obj_t *ta = lv_event_get_target_obj(e);
@@ -861,6 +887,18 @@ void doUpdateTasks() {
             int32_t new_val = evalIntegerProperty(updateTask.flow_state, updateTask.component_index, updateTask.property_index, "Failed to evaluate Value in Spinbox widget");
             int32_t cur_val = lv_spinbox_get_step(updateTask.obj);
             if (new_val != cur_val) lv_spinbox_set_step(updateTask.obj, new_val);
+        } else if (updateTask.updateTaskType == UPDATE_TASK_TYPE_SPINBOX_MIN) {
+            int32_t new_val = evalIntegerProperty(updateTask.flow_state, updateTask.component_index, updateTask.property_index, "Failed to evaluate Min in Spinbox widget");
+            lv_spinbox_t * spinbox = (lv_spinbox_t *) updateTask.obj;
+            int32_t cur_val = spinbox->range_min;
+            int32_t max_val = spinbox->range_max;
+            if (new_val != cur_val) lv_spinbox_set_range(updateTask.obj, new_val, max_val);
+        } else if (updateTask.updateTaskType == UPDATE_TASK_TYPE_SPINBOX_MAX) {
+            int32_t new_val = evalIntegerProperty(updateTask.flow_state, updateTask.component_index, updateTask.property_index, "Failed to evaluate Max in Spinbox widget");
+            lv_spinbox_t * spinbox = (lv_spinbox_t *) updateTask.obj;
+            int32_t cur_val = spinbox->range_max;
+            int32_t min_val = spinbox->range_min;
+            if (new_val != cur_val) lv_spinbox_set_range(updateTask.obj, min_val, cur_val);
         }
         g_updateTask = nullptr;
     }
