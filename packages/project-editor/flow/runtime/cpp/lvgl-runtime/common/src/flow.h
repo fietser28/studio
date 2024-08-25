@@ -52,6 +52,8 @@ void clearTimeline();
 #define LV_EVENT_SPINBOX_STEP_CHANGED 0x7D
 #define LV_EVENT_SPINBOX_MIN_CHANGED 0x7E
 #define LV_EVENT_SPINBOX_MAX_CHANGED 0x7F
+#define LV_EVENT_SPINBOX_COUNTER_CHANGED 0x80
+#define LV_EVENT_SPINBOX_SEPARATOR_CHANGED 0x81
 #define LV_EVENT_CHECKED   0x82
 #define LV_EVENT_UNCHECKED 0x83
 
@@ -75,6 +77,8 @@ void flow_event_spinbox_value_changed_callback(lv_event_t *e);
 void flow_event_spinbox_step_changed_callback(lv_event_t *e);
 void flow_event_spinbox_min_changed_callback(lv_event_t *e);
 void flow_event_spinbox_max_changed_callback(lv_event_t *e);
+void flow_event_spinbox_digit_counter_changed_callback(lv_event_t *e);
+void flow_event_spinbox_separator_position_changed_callback(lv_event_t *e);
 void flow_event_checked_callback(lv_event_t *e);
 void flow_event_unchecked_callback(lv_event_t *e);
 void flow_event_meter_tick_label_event_callback(lv_event_t *e);
@@ -107,7 +111,9 @@ enum UpdateTaskType {
     UPDATE_TASK_TYPE_SPINBOX_VALUE,
     UPDATE_TASK_TYPE_SPINBOX_STEP,
     UPDATE_TASK_TYPE_SPINBOX_MIN,
-    UPDATE_TASK_TYPE_SPINBOX_MAX
+    UPDATE_TASK_TYPE_SPINBOX_MAX,
+    UPDATE_TASK_TYPE_SPINBOX_COUNTER,
+    UPDATE_TASK_TYPE_SPINBOX_SEPARATOR,
 };
 
 void addUpdateTask(enum UpdateTaskType updateTaskType, lv_obj_t *obj, void *flow_state, unsigned component_index, unsigned property_index, void *subobj, int param);

@@ -228,6 +228,17 @@ export class LVGLSpinboxWidget extends LVGLWidget {
         });
     }
 
+    override getIsAccessibleFromSourceCode() {
+        return (
+            this.digitCountType == "expression" ||
+            this.separatorPositionType == "expression" ||
+            this.minType == "expression" ||
+            this.maxType == "expression" ||
+            this.valueType == "expression" ||
+            this.stepType == "expression"
+        );
+    }
+
     override get hasEventHandler() {
         return (
             super.hasEventHandler ||
@@ -244,7 +255,7 @@ export class LVGLSpinboxWidget extends LVGLWidget {
         runtime: LVGLPageRuntime,
         parentObj: number
     ): number {
-        const digitCounterExpr = getExpressionPropertyData(runtime, this, "digitCount");
+        const digitCountExpr = getExpressionPropertyData(runtime, this, "digitCount");
         const separatorPositionExpr = getExpressionPropertyData(runtime, this, "separatorPosition");
         const minExpr = getExpressionPropertyData(runtime, this, "min");
         const maxExpr = getExpressionPropertyData(runtime, this, "max");
@@ -262,16 +273,16 @@ export class LVGLSpinboxWidget extends LVGLWidget {
             rect.width,
             rect.height,
 
-            digitCounterExpr
-                ? 0
+            digitCountExpr
+                ? 5
                 : this.digitCountType == "expression"
-                    ? 0
+                    ? 5
                     : (this.digitCount as number),
 
             separatorPositionExpr
-                ? 0
+                ? 1
                 : this.separatorPositionType == "expression"
-                    ? 0
+                    ? 1
                     : (this.separatorPosition as number),
 
             minExpr
@@ -281,17 +292,17 @@ export class LVGLSpinboxWidget extends LVGLWidget {
                     : (this.min as number),
 
             maxExpr
-                ? 0
+                ? 9999
                 : this.maxType == "expression"
-                    ? 0
+                    ? 9999
                     : (this.max as number),
 
             this.rollover,
 
             stepExpr
-                ? 0
+                ? 1
                 : this.stepType == "expression"
-                    ? 0
+                    ? 1
                     : (this.step as number),
 
             valueExpr
@@ -300,25 +311,25 @@ export class LVGLSpinboxWidget extends LVGLWidget {
                     ? 0
                     : (this.value as number)
         );
-        /*
-                if (digitCountExpr) {
-                    runtime.wasm._lvglUpdateSpinboxValue(
-                        obj,
-                        getFlowStateAddressIndex(runtime),
-                        digitCountExpr.componentIndex,
-                        digitCountExpr.propertyIndex
-                    );
-                }
-        
-                if (separatorPositionExpr) {
-                    runtime.wasm._lvglUpdateSpinboxValue(
-                        obj,
-                        getFlowStateAddressIndex(runtime),
-                        separatorPositionExpr.componentIndex,
-                        separatorPositionExpr.propertyIndex
-                    );
-                }
-        
+
+        if (digitCountExpr) {
+            runtime.wasm._lvglUpdateSpinboxDigitCounter(
+                obj,
+                getFlowStateAddressIndex(runtime),
+                digitCountExpr.componentIndex,
+                digitCountExpr.propertyIndex
+            );
+        }
+
+        if (separatorPositionExpr) {
+            runtime.wasm._lvglUpdateSpinboxSeparatorPosition(
+                obj,
+                getFlowStateAddressIndex(runtime),
+                separatorPositionExpr.componentIndex,
+                separatorPositionExpr.propertyIndex
+            );
+        }
+
         if (minExpr) {
             runtime.wasm._lvglUpdateSpinboxMin(
                 obj,
@@ -327,7 +338,7 @@ export class LVGLSpinboxWidget extends LVGLWidget {
                 minExpr.propertyIndex
             );
         }
-        */
+
         if (maxExpr) {
             runtime.wasm._lvglUpdateSpinboxMax(
                 obj,
@@ -513,13 +524,6 @@ export class LVGLSpinboxWidget extends LVGLWidget {
     }
 
     override buildEventHandlerSpecific(build: LVGLBuild) {
-        expressionPropertyBuildEventHandlerSpecific<LVGLSpinboxWidget>(
-            build,
-            this,
-            "max" as const,
-            "lv_spinbox_get_step"
-        );
-
         expressionPropertyBuildEventHandlerSpecific<LVGLSpinboxWidget>(
             build,
             this,

@@ -650,6 +650,8 @@ export interface IWasmFlowRuntime {
     _lvglUpdateSpinboxStep(obj: number, flow_state: number, component_index: number, property_index: number): void;
     _lvglUpdateSpinboxMin(obj: number, flow_state: number, component_index: number, property_index: number): void;
     _lvglUpdateSpinboxMax(obj: number, flow_state: number, component_index: number, property_index: number): void;
+    _lvglUpdateSpinboxDigitCounter(obj: number, flow_state: number, component_index: number, property_index: number): void;
+    _lvglUpdateSpinboxSeparatorPosition(obj: number, flow_state: number, component_index: number, property_index: number): void;
 
 
     _lvglCreateTable(parentObj: number, index: number, x: number, y: number, w: number, h: number);

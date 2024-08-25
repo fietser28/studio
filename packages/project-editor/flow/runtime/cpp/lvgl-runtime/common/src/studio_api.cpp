@@ -554,6 +554,14 @@ EM_PORT_API(void) lvglUpdateSpinboxMax(lv_obj_t *obj, void *flow_state, unsigned
     addUpdateTask(UPDATE_TASK_TYPE_SPINBOX_MAX, obj, flow_state, component_index, property_index, 0, 0);
 }
 
+EM_PORT_API(void) lvglUpdateSpinboxDigitCounter(lv_obj_t *obj, void *flow_state, unsigned component_index, unsigned property_index) {
+    addUpdateTask(UPDATE_TASK_TYPE_SPINBOX_COUNTER, obj, flow_state, component_index, property_index, 0, 0);
+}
+
+EM_PORT_API(void) lvglUpdateSpinboxSeparatorPosition(lv_obj_t *obj, void *flow_state, unsigned component_index, unsigned property_index) {
+    addUpdateTask(UPDATE_TASK_TYPE_SPINBOX_SEPARATOR, obj, flow_state, component_index, property_index, 0, 0);
+}
+
 EM_PORT_API(lv_obj_t *) lvglCreateTable(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h) {
     lv_obj_t *obj = lv_table_create(parentObj);
     lv_obj_set_pos(obj, x, y);
