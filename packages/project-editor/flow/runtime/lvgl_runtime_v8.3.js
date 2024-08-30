@@ -887,18 +887,20 @@ function dbg(...args) {
 // === Body ===
 
 var ASM_CONSTS = {
-  1038488: ($0) => { startToDebuggerMessage($0); },  
- 1038520: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
- 1038595: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
- 1038670: ($0) => { finishToDebuggerMessage($0); },  
- 1038703: ($0, $1) => { return getLvglImageByName($0, UTF8ToString($1)); },  
- 1038756: ($0, $1, $2, $3, $4, $5) => { return eez_mqtt_init($0, UTF8ToString($1), UTF8ToString($2), $3, UTF8ToString($4), UTF8ToString($5)); },  
- 1038862: ($0, $1) => { return eez_mqtt_deinit($0, $1); },  
- 1038898: ($0, $1) => { return eez_mqtt_connect($0, $1); },  
- 1038935: ($0, $1) => { return eez_mqtt_disconnect($0, $1); },  
- 1038975: ($0, $1, $2) => { return eez_mqtt_subscribe($0, $1, UTF8ToString($2)); },  
- 1039032: ($0, $1, $2) => { return eez_mqtt_unsubscribe($0, $1, UTF8ToString($2)); },  
- 1039091: ($0, $1, $2, $3) => { return eez_mqtt_publish($0, $1, UTF8ToString($2), UTF8ToString($3)); }
+  1038712: ($0) => { startToDebuggerMessage($0); },  
+ 1038744: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
+ 1038819: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
+ 1038894: ($0) => { finishToDebuggerMessage($0); },  
+ 1038927: ($0, $1) => { return getLvglImageByName($0, UTF8ToString($1)); },  
+ 1038980: ($0, $1, $2) => { lvglObjAddStyle($0, $1, $2); },  
+ 1039013: ($0, $1, $2) => { lvglObjRemoveStyle($0, $1, $2); },  
+ 1039049: ($0, $1, $2, $3, $4, $5) => { return eez_mqtt_init($0, UTF8ToString($1), UTF8ToString($2), $3, UTF8ToString($4), UTF8ToString($5)); },  
+ 1039155: ($0, $1) => { return eez_mqtt_deinit($0, $1); },  
+ 1039191: ($0, $1) => { return eez_mqtt_connect($0, $1); },  
+ 1039228: ($0, $1) => { return eez_mqtt_disconnect($0, $1); },  
+ 1039268: ($0, $1, $2) => { return eez_mqtt_subscribe($0, $1, UTF8ToString($2)); },  
+ 1039325: ($0, $1, $2) => { return eez_mqtt_unsubscribe($0, $1, UTF8ToString($2)); },  
+ 1039384: ($0, $1, $2, $3) => { return eez_mqtt_publish($0, $1, UTF8ToString($2), UTF8ToString($3)); }
 };
 
 // end include: preamble.js
@@ -4445,7 +4447,7 @@ var _lvglCreateSlider = Module['_lvglCreateSlider'] = createExportWrapper('lvglC
 var _lvglCreateRoller = Module['_lvglCreateRoller'] = createExportWrapper('lvglCreateRoller', 9);
 var _lvglCreateSwitch = Module['_lvglCreateSwitch'] = createExportWrapper('lvglCreateSwitch', 6);
 var _lvglCreateBar = Module['_lvglCreateBar'] = createExportWrapper('lvglCreateBar', 11);
-var _lvglCreateDropdown = Module['_lvglCreateDropdown'] = createExportWrapper('lvglCreateDropdown', 8);
+var _lvglCreateDropdown = Module['_lvglCreateDropdown'] = createExportWrapper('lvglCreateDropdown', 9);
 var _lvglCreateArc = Module['_lvglCreateArc'] = createExportWrapper('lvglCreateArc', 13);
 var _lvglCreateSpinner = Module['_lvglCreateSpinner'] = createExportWrapper('lvglCreateSpinner', 6);
 var _lvglCreateCheckbox = Module['_lvglCreateCheckbox'] = createExportWrapper('lvglCreateCheckbox', 7);
@@ -4494,13 +4496,21 @@ var _lvglObjSetLocalStylePropPtr = Module['_lvglObjSetLocalStylePropPtr'] = crea
 var _lvglObjGetStylePropBuiltInFont = Module['_lvglObjGetStylePropBuiltInFont'] = createExportWrapper('lvglObjGetStylePropBuiltInFont', 3);
 var _lvglObjGetStylePropFontAddr = Module['_lvglObjGetStylePropFontAddr'] = createExportWrapper('lvglObjGetStylePropFontAddr', 3);
 var _lvglObjSetLocalStylePropBuiltInFont = Module['_lvglObjSetLocalStylePropBuiltInFont'] = createExportWrapper('lvglObjSetLocalStylePropBuiltInFont', 4);
+var _lvglStyleCreate = Module['_lvglStyleCreate'] = createExportWrapper('lvglStyleCreate', 0);
+var _lvglStyleSetPropColor = Module['_lvglStyleSetPropColor'] = createExportWrapper('lvglStyleSetPropColor', 3);
+var _lvglSetStylePropBuiltInFont = Module['_lvglSetStylePropBuiltInFont'] = createExportWrapper('lvglSetStylePropBuiltInFont', 3);
+var _lvglSetStylePropPtr = Module['_lvglSetStylePropPtr'] = createExportWrapper('lvglSetStylePropPtr', 3);
+var _lvglSetStylePropNum = Module['_lvglSetStylePropNum'] = createExportWrapper('lvglSetStylePropNum', 3);
+var _lvglStyleDelete = Module['_lvglStyleDelete'] = createExportWrapper('lvglStyleDelete', 1);
+var _lvglObjAddStyle = Module['_lvglObjAddStyle'] = createExportWrapper('lvglObjAddStyle', 3);
+var _lvglObjRemoveStyle = Module['_lvglObjRemoveStyle'] = createExportWrapper('lvglObjRemoveStyle', 3);
 var _lvglGetObjRelX = Module['_lvglGetObjRelX'] = createExportWrapper('lvglGetObjRelX', 1);
 var _lvglGetObjRelY = Module['_lvglGetObjRelY'] = createExportWrapper('lvglGetObjRelY', 1);
 var _lvglGetObjWidth = Module['_lvglGetObjWidth'] = createExportWrapper('lvglGetObjWidth', 1);
 var _lvglGetObjHeight = Module['_lvglGetObjHeight'] = createExportWrapper('lvglGetObjHeight', 1);
 var _lvglLoadFont = Module['_lvglLoadFont'] = createExportWrapper('lvglLoadFont', 1);
 var _lvglFreeFont = Module['_lvglFreeFont'] = createExportWrapper('lvglFreeFont', 1);
-var _lvglAddObjectFlowCallback = Module['_lvglAddObjectFlowCallback'] = createExportWrapper('lvglAddObjectFlowCallback', 5);
+var _lvglAddObjectFlowCallback = Module['_lvglAddObjectFlowCallback'] = createExportWrapper('lvglAddObjectFlowCallback', 6);
 var _lvglUpdateLabelText = Module['_lvglUpdateLabelText'] = createExportWrapper('lvglUpdateLabelText', 4);
 var _lvglSetImgbuttonImageSrc = Module['_lvglSetImgbuttonImageSrc'] = createExportWrapper('lvglSetImgbuttonImageSrc', 3);
 var _lvglSetKeyboardTextarea = Module['_lvglSetKeyboardTextarea'] = createExportWrapper('lvglSetKeyboardTextarea', 2);

@@ -217,13 +217,14 @@ EM_PORT_API(lv_obj_t *) lvglCreateBar(lv_obj_t *parentObj, int32_t index, lv_coo
     return obj;
 }
 
-EM_PORT_API(lv_obj_t *) lvglCreateDropdown(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h, char *options, uint16_t selected) {
+EM_PORT_API(lv_obj_t *) lvglCreateDropdown(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h, char *options, uint16_t selected, lv_dir_t direction) {
     lv_obj_t *obj = lv_dropdown_create(parentObj);
     lv_obj_set_pos(obj, x, y);
     lv_obj_set_size(obj, w, h);
     lv_dropdown_set_options(obj, options);
     lv_dropdown_set_selected(obj, selected);
     free(options);
+    lv_dropdown_set_dir(obj, direction);
     lv_obj_update_layout(obj);
     setObjectIndex(obj, index);
     return obj;
@@ -732,6 +733,59 @@ EM_PORT_API(void) lvglObjSetLocalStylePropBuiltInFont(lv_obj_t *obj, lv_style_pr
     lv_obj_update_layout(obj);
 }
 
+EM_PORT_API(lv_style_t *) lvglStyleCreate() {
+#if LVGL_VERSION_MAJOR >= 9
+    lv_style_t *style = (lv_style_t *)lv_malloc(sizeof(lv_style_t));
+#else
+    lv_style_t *style = (lv_style_t *)lv_mem_alloc(sizeof(lv_style_t));
+#endif
+    lv_style_init(style);
+    return style;
+}
+
+EM_PORT_API(void) lvglStyleSetPropColor(lv_style_t *obj, lv_style_prop_t prop, uint32_t color) {
+    lv_style_value_t value;
+    value.color = lv_color_hex(color);
+    lv_style_set_prop(obj, prop, value);
+}
+
+EM_PORT_API(void) lvglSetStylePropBuiltInFont(lv_style_t *obj, lv_style_prop_t prop, int font_index) {
+    lv_style_value_t value;
+    value.ptr = BUILT_IN_FONTS[font_index];
+    lv_style_set_prop(obj, prop, value);
+}
+
+EM_PORT_API(void) lvglSetStylePropPtr(lv_style_t *obj, lv_style_prop_t prop, const void *ptr) {
+        lv_style_value_t value;
+    value.ptr = ptr;
+    lv_style_set_prop(obj, prop, value);
+
+}
+
+EM_PORT_API(void) lvglSetStylePropNum(lv_style_t *obj, lv_style_prop_t prop, int32_t num) {
+    lv_style_value_t value;
+    value.num = num;
+    lv_style_set_prop(obj, prop, value);
+}
+
+EM_PORT_API(void) lvglStyleDelete(lv_style_t *obj) {
+#if LVGL_VERSION_MAJOR >= 9
+    lv_free(obj);
+#else
+    lv_mem_free(obj);
+#endif
+}
+
+EM_PORT_API(void) lvglObjAddStyle(lv_obj_t *obj, lv_style_t *style, lv_style_selector_t selector) {
+    lv_obj_add_style(obj, style, selector);
+    lv_obj_update_layout(obj);
+}
+
+EM_PORT_API(void) lvglObjRemoveStyle(lv_obj_t *obj, lv_style_t *style, lv_style_selector_t selector) {
+    lv_obj_remove_style(obj, style, selector);
+    lv_obj_update_layout(obj);
+}
+
 EM_PORT_API(int16_t) lvglGetObjRelX(lv_obj_t *obj) {
     lv_obj_t *parent = lv_obj_get_parent(obj);
     if (parent) {
@@ -773,7 +827,7 @@ EM_PORT_API(void) lvglFreeFont(lv_font_t *font) {
 #endif
 }
 
-EM_PORT_API(void) lvglAddObjectFlowCallback(lv_obj_t *obj, lv_event_code_t filter, void *flow_state, unsigned component_index, unsigned output_or_property_index) {
+EM_PORT_API(void) lvglAddObjectFlowCallback(lv_obj_t *obj, lv_event_code_t filter, void *flow_state, unsigned component_index, unsigned output_or_property_index, int32_t user_data) {
 #if LVGL_VERSION_MAJOR >= 9
     FlowEventCallbackData *data = (FlowEventCallbackData *)lv_malloc(sizeof(FlowEventCallbackData));
 #else
@@ -783,6 +837,7 @@ EM_PORT_API(void) lvglAddObjectFlowCallback(lv_obj_t *obj, lv_event_code_t filte
     data->flow_state = flow_state;
     data->component_index = component_index;
     data->output_or_property_index = output_or_property_index;
+    data->user_data = user_data;
 
     if (filter == LV_EVENT_METER_TICK_LABEL_EVENT) {
 #if LVGL_VERSION_MAJOR >= 9

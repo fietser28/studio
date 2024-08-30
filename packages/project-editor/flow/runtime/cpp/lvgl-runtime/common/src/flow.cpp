@@ -464,33 +464,8 @@ static UpdateTask *g_updateTask;
 
 void flow_event_callback(lv_event_t *e) {
     FlowEventCallbackData *data = (FlowEventCallbackData *)e->user_data;
-    lv_event_code_t event = lv_event_get_code(e);
-    if (event == LV_EVENT_GESTURE) {
-#if LVGL_VERSION_MAJOR >= 9
-        flowPropagateValueInt32(data->flow_state, data->component_index, data->output_or_property_index, (int32_t)lv_indev_get_gesture_dir(lv_indev_active()));
-#else
-        flowPropagateValueInt32(data->flow_state, data->component_index, data->output_or_property_index, (int32_t)lv_indev_get_gesture_dir(lv_indev_get_act()));
-#endif
-    } else if (event == LV_EVENT_KEY) {
-        flowPropagateValueUint32(data->flow_state, data->component_index, data->output_or_property_index,  lv_event_get_key(e));
-#if LVGL_VERSION_MAJOR >= 9
-    } else if (event == LV_EVENT_ROTARY) {
-        flowPropagateValueInt32(data->flow_state, data->component_index, data->output_or_property_index, lv_event_get_rotary_diff(e));
-#endif
-    } else if (event == LV_EVENT_VALUE_CHANGED) {
-        lv_obj_t *ta = lv_event_get_target_obj(e);
-#if LVGL_VERSION_MAJOR >= 9
-        if (lv_obj_check_type(ta, &lv_buttonmatrix_class)) {
-#else
-        if (lv_obj_check_type(ta, &lv_btnmatrix_class)) {
-#endif
-            flowPropagateValueUint32(data->flow_state, data->component_index, data->output_or_property_index, *(uint32_t *)lv_event_get_param(e));
-        } else {
-            flowPropagateValue(data->flow_state, data->component_index, data->output_or_property_index);
-        }
-    } else {
-        flowPropagateValue(data->flow_state, data->component_index, data->output_or_property_index);
-    }
+    e->user_data = (void *)data->user_data;
+    flowPropagateValueLVGLEvent(data->flow_state, data->component_index, data->output_or_property_index, e);
 }
 
 void flow_event_textarea_text_changed_callback(lv_event_t *e) {
@@ -1030,6 +1005,20 @@ static const void *getLvglImageByName(const char *name) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static void lvglObjAddStyle(lv_obj_t *obj, int32_t styleIndex) {
+    return EM_ASM({
+        lvglObjAddStyle($0, $1, $2);
+    }, eez::flow::g_wasmModuleId, obj, styleIndex);
+}
+
+static void lvglObjRemoveStyle(lv_obj_t *obj, int32_t styleIndex) {
+    return EM_ASM({
+        lvglObjRemoveStyle($0, $1, $2);
+    }, eez::flow::g_wasmModuleId, obj, styleIndex);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 extern "C" void flowInit(uint32_t wasmModuleId, uint32_t debuggerMessageSubsciptionFilter, uint8_t *assets, uint32_t assetsSize, bool darkTheme, uint32_t timeZone) {
     lv_disp_t * dispp = lv_disp_get_default();
     lv_theme_t * theme = lv_theme_default_init(dispp, lv_palette_main(LV_PALETTE_BLUE), lv_palette_main(LV_PALETTE_RED), darkTheme, LV_FONT_DEFAULT);
@@ -1052,6 +1041,8 @@ extern "C" void flowInit(uint32_t wasmModuleId, uint32_t debuggerMessageSubscipt
     eez::flow::stopScriptHook = stopScript;
     eez::flow::getLvglObjectFromIndexHook = getLvglObjectFromIndex;
     eez::flow::getLvglImageByNameHook = getLvglImageByName;
+    eez::flow::lvglObjAddStyleHook = lvglObjAddStyle;
+    eez::flow::lvglObjRemoveStyleHook = lvglObjRemoveStyle;
 
     eez::flow::setDebuggerMessageSubsciptionFilter(debuggerMessageSubsciptionFilter);
     eez::flow::onDebuggerClientConnected();

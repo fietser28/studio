@@ -13,6 +13,7 @@ export type BasicType =
     | "stream"
     | "widget"
     | "json"
+    | "event"
     | "any";
 
 export type OtherBasicType =
@@ -361,6 +362,16 @@ export interface WorkerToRenderMessage {
     getLvglImageByName?: {
         name: string;
     };
+
+    lvglObjAddStyle?: {
+        targetObj: number;
+        styleIndex: number;
+    };
+
+    lvglObjRemoveStyle?: {
+        targetObj: number;
+        styleIndex: number;
+    };
 }
 
 interface IField {
@@ -617,7 +628,7 @@ export interface IWasmFlowRuntime {
     _lvglCreateRoller(parentObj: number, index: number, x: number, y: number, w: number, h: number, options: number, selected: number, mode: number): number;
     _lvglCreateSwitch(parentObj: number, index: number, x: number, y: number, w: number, h: number): number;
     _lvglCreateBar(parentObj: number, index: number, x: number, y: number, w: number, h: number, min: number, max: number, mode: number, value: number, value_left: number): number;
-    _lvglCreateDropdown(parentObj: number, index: number, x: number, y: number, w: number, h: number, options: number, selected: number): number;
+    _lvglCreateDropdown(parentObj: number, index: number, x: number, y: number, w: number, h: number, options: number, selected: number, direction: number): number;
     _lvglCreateArc(parentObj: number, index: number, x: number, y: number, w: number, h: number, range_min: number, range_max: number, value: number, bg_start_angle: number, bg_end_angle: number, mode: number, rotation: number): number;
     _lvglCreateSpinner(parentObj: number, index: number, x: number, y: number, w: number, h: number): number;
     _lvglCreateCheckbox(parentObj: number, index: number, x: number, y: number, w: number, h: number, text: number): number;
@@ -673,13 +684,24 @@ export interface IWasmFlowRuntime {
     _lvglObjGetStylePropBuiltInFont(obj: number, part: number, prop: number): number;
     _lvglObjGetStylePropFontAddr(obj: number, part: number, prop: number): number;
     _lvglObjSetLocalStylePropBuiltInFont(obj: number, prop: number, font_index: number, selector: number): void;
+
+    _lvglStyleCreate(): number;
+    _lvglStyleSetPropColor(obj: number, prop: number, color: number): void;
+    _lvglSetStylePropBuiltInFont(obj: number, prop: number, font_index: number): void
+    _lvglSetStylePropPtr(obj: number, prop: number, ptr: number): void;
+    _lvglSetStylePropNum(obj: number, prop: number, num: number): void;
+    _lvglStyleDelete(obj: number): void;
+
+    _lvglObjAddStyle(obj: number, style: number, selector: number): void;
+    _lvglObjRemoveStyle(obj: number, style: number, selector: number): void;
+
     _lvglGetObjRelX(obj: number): number;
     _lvglGetObjRelY(obj: number): number;
     _lvglGetObjWidth(obj: number): number;
     _lvglGetObjHeight(obj: number): number;
     _lvglLoadFont(font_file_path: number): number;
     _lvglFreeFont(font_ptr: number): void;
-    _lvglAddObjectFlowCallback(obj: number, filter: number, flow_state: number, component_index: number, output_or_property_index: number): void;
+    _lvglAddObjectFlowCallback(obj: number, filter: number, flow_state: number, component_index: number, output_or_property_index: number, userDataValuePtr: number): void;
     _lvglSetImgbuttonImageSrc(obj: number, statE: number, img_src: number): void;
     _lvglSetKeyboardTextarea(obj: number, textarea: number): void;
     _lvglMeterAddScale(obj: number,
