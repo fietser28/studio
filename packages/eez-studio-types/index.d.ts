@@ -656,7 +656,7 @@ export interface IWasmFlowRuntime {
     _lvglCreateMessageBox(parentObj: number, index: number, x: number, y: number, w: number, h: number);
     _lvglCreateSpan(parentObj: number, index: number, x: number, y: number, w: number, h: number);
 
-    _lvglCreateSpinbox(parentObj: number, index: number, x: number, y: number, w: number, h: number, digit_count: number, separator_position: number, min: number, max: number, rollover: boolean, step: number, value: number);
+    _lvglCreateSpinbox(parentObj: number, index: number, x: number, y: number, w: number, h: number, digit_count: number, separator_position: number, min: number, max: number, rollover: boolean, step_direction: number, step: number, value: number);
     _lvglUpdateSpinboxValue(obj: number, flow_state: number, component_index: number, property_index: number): void;
     _lvglUpdateSpinboxStep(obj: number, flow_state: number, component_index: number, property_index: number): void;
     _lvglUpdateSpinboxMin(obj: number, flow_state: number, component_index: number, property_index: number): void;

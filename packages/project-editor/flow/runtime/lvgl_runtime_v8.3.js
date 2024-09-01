@@ -4471,7 +4471,7 @@ var _lvglCreateLottie = Module['_lvglCreateLottie'] = createExportWrapper('lvglC
 var _lvglCreateMenu = Module['_lvglCreateMenu'] = createExportWrapper('lvglCreateMenu', 6);
 var _lvglCreateMessageBox = Module['_lvglCreateMessageBox'] = createExportWrapper('lvglCreateMessageBox', 6);
 var _lvglCreateSpan = Module['_lvglCreateSpan'] = createExportWrapper('lvglCreateSpan', 6);
-var _lvglCreateSpinbox = Module['_lvglCreateSpinbox'] = createExportWrapper('lvglCreateSpinbox', 13);
+var _lvglCreateSpinbox = Module['_lvglCreateSpinbox'] = createExportWrapper('lvglCreateSpinbox', 14);
 var _lvglUpdateSpinboxValue = Module['_lvglUpdateSpinboxValue'] = createExportWrapper('lvglUpdateSpinboxValue', 4);
 var _lvglUpdateSpinboxStep = Module['_lvglUpdateSpinboxStep'] = createExportWrapper('lvglUpdateSpinboxStep', 4);
 var _lvglUpdateSpinboxMin = Module['_lvglUpdateSpinboxMin'] = createExportWrapper('lvglUpdateSpinboxMin', 4);
