@@ -522,7 +522,7 @@ EM_PORT_API(lv_obj_t *) lvglCreateSpan(lv_obj_t *parentObj, int32_t index, lv_co
     return obj;
 }
 
-EM_PORT_API(lv_obj_t *) lvglCreateSpinbox(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h, uint32_t  digit_count, uint32_t separator_position, int32_t min, int32_t max, bool rollover, int32_t step, int32_t value) {
+EM_PORT_API(lv_obj_t *) lvglCreateSpinbox(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h, uint32_t  digit_count, uint32_t separator_position, int32_t min, int32_t max, bool rollover, lv_dir_t step_direction, int32_t step, int32_t value) {
     lv_obj_t *obj = lv_spinbox_create(parentObj);
     lv_obj_set_pos(obj, x, y);
     lv_obj_set_size(obj, w, h);
@@ -530,6 +530,7 @@ EM_PORT_API(lv_obj_t *) lvglCreateSpinbox(lv_obj_t *parentObj, int32_t index, lv
     lv_spinbox_set_digit_format(obj, digit_count, separator_position);
     lv_spinbox_set_range(obj, min, max);
     lv_spinbox_set_rollover(obj, rollover);
+    lv_spinbox_set_digit_step_direction(obj, step_direction);
 
     lv_spinbox_set_step(obj, step);
     lv_spinbox_set_value(obj, value);
@@ -867,6 +868,8 @@ EM_PORT_API(void) lvglAddObjectFlowCallback(lv_obj_t *obj, lv_event_code_t filte
         lv_obj_add_event_cb(obj, flow_event_spinbox_value_changed_callback, LV_EVENT_VALUE_CHANGED, data);
     } else if (filter == LV_EVENT_SPINBOX_STEP_CHANGED) {
         lv_obj_add_event_cb(obj, flow_event_spinbox_step_changed_callback, LV_EVENT_VALUE_CHANGED, data);
+    } else if (filter == LV_EVENT_SPINBOX_SEPARATOR_CHANGED) {
+        lv_obj_add_event_cb(obj, flow_event_spinbox_separator_position_changed_callback, LV_EVENT_VALUE_CHANGED, data);
     } else {
         lv_obj_add_event_cb(obj, flow_event_callback, filter, data);
     }

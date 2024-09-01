@@ -887,20 +887,20 @@ function dbg(...args) {
 // === Body ===
 
 var ASM_CONSTS = {
-  1033736: ($0) => { startToDebuggerMessage($0); },  
- 1033768: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
- 1033843: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
- 1033918: ($0) => { finishToDebuggerMessage($0); },  
- 1033951: ($0, $1) => { return getLvglImageByName($0, UTF8ToString($1)); },  
- 1034004: ($0, $1, $2) => { lvglObjAddStyle($0, $1, $2); },  
- 1034037: ($0, $1, $2) => { lvglObjRemoveStyle($0, $1, $2); },  
- 1034073: ($0, $1, $2, $3, $4, $5) => { return eez_mqtt_init($0, UTF8ToString($1), UTF8ToString($2), $3, UTF8ToString($4), UTF8ToString($5)); },  
- 1034179: ($0, $1) => { return eez_mqtt_deinit($0, $1); },  
- 1034215: ($0, $1) => { return eez_mqtt_connect($0, $1); },  
- 1034252: ($0, $1) => { return eez_mqtt_disconnect($0, $1); },  
- 1034292: ($0, $1, $2) => { return eez_mqtt_subscribe($0, $1, UTF8ToString($2)); },  
- 1034349: ($0, $1, $2) => { return eez_mqtt_unsubscribe($0, $1, UTF8ToString($2)); },  
- 1034408: ($0, $1, $2, $3) => { return eez_mqtt_publish($0, $1, UTF8ToString($2), UTF8ToString($3)); }
+  1033784: ($0) => { startToDebuggerMessage($0); },  
+ 1033816: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
+ 1033891: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
+ 1033966: ($0) => { finishToDebuggerMessage($0); },  
+ 1033999: ($0, $1) => { return getLvglImageByName($0, UTF8ToString($1)); },  
+ 1034052: ($0, $1, $2) => { lvglObjAddStyle($0, $1, $2); },  
+ 1034085: ($0, $1, $2) => { lvglObjRemoveStyle($0, $1, $2); },  
+ 1034121: ($0, $1, $2, $3, $4, $5) => { return eez_mqtt_init($0, UTF8ToString($1), UTF8ToString($2), $3, UTF8ToString($4), UTF8ToString($5)); },  
+ 1034227: ($0, $1) => { return eez_mqtt_deinit($0, $1); },  
+ 1034263: ($0, $1) => { return eez_mqtt_connect($0, $1); },  
+ 1034300: ($0, $1) => { return eez_mqtt_disconnect($0, $1); },  
+ 1034340: ($0, $1, $2) => { return eez_mqtt_subscribe($0, $1, UTF8ToString($2)); },  
+ 1034397: ($0, $1, $2) => { return eez_mqtt_unsubscribe($0, $1, UTF8ToString($2)); },  
+ 1034456: ($0, $1, $2, $3) => { return eez_mqtt_publish($0, $1, UTF8ToString($2), UTF8ToString($3)); }
 };
 
 // end include: preamble.js
