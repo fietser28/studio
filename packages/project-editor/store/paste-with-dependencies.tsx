@@ -70,7 +70,7 @@ import {
     getOutputDisplayName
 } from "project-editor/flow/helper";
 import { VALIDATION_MESSAGE_REQUIRED } from "eez-studio-shared/validation";
-import { identifierValidator } from "project-editor/features/variable/variable";
+import { validators as validatorsRenderer } from "eez-studio-shared/validation-renderer";
 import type { Style } from "project-editor/features/style/style";
 import type { LVGLStyle } from "project-editor/lvgl/style";
 import {
@@ -263,7 +263,7 @@ class PasteObject {
         }
 
         if (this.object instanceof ProjectEditor.VariableClass) {
-            const errorMessage = identifierValidator(
+            const errorMessage = validatorsRenderer.identifierValidator(
                 this,
                 "conflictResolutionName"
             );
@@ -435,12 +435,16 @@ class PasteWithDependenciesModel {
             object instanceof ProjectEditor.StyleClass ||
             object instanceof ProjectEditor.LVGLStyleClass
         ) {
-            const parentObject = getParent(getParent(object));
-            if (
-                parentObject instanceof ProjectEditor.StyleClass ||
-                parentObject instanceof ProjectEditor.LVGLStyleClass
-            ) {
-                parentStyleObject = parentObject;
+            const collection = getParent(object);
+            if (collection) {
+                const parentObject = getParent(collection);
+                if (
+                    parentObject &&
+                    (parentObject instanceof ProjectEditor.StyleClass ||
+                        parentObject instanceof ProjectEditor.LVGLStyleClass)
+                ) {
+                    parentStyleObject = parentObject;
+                }
             }
         }
 

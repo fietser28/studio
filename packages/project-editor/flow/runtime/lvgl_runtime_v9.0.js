@@ -887,6 +887,7 @@ function dbg(...args) {
 // === Body ===
 
 var ASM_CONSTS = {
+<<<<<<< HEAD
   1033784: ($0) => { startToDebuggerMessage($0); },  
  1033816: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
  1033891: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
@@ -901,6 +902,22 @@ var ASM_CONSTS = {
  1034340: ($0, $1, $2) => { return eez_mqtt_subscribe($0, $1, UTF8ToString($2)); },  
  1034397: ($0, $1, $2) => { return eez_mqtt_unsubscribe($0, $1, UTF8ToString($2)); },  
  1034456: ($0, $1, $2, $3) => { return eez_mqtt_publish($0, $1, UTF8ToString($2), UTF8ToString($3)); }
+=======
+  1031336: ($0) => { startToDebuggerMessage($0); },  
+ 1031368: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
+ 1031443: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
+ 1031518: ($0) => { finishToDebuggerMessage($0); },  
+ 1031551: ($0, $1) => { return getLvglImageByName($0, UTF8ToString($1)); },  
+ 1031604: ($0, $1, $2) => { lvglObjAddStyle($0, $1, $2); },  
+ 1031637: ($0, $1, $2) => { lvglObjRemoveStyle($0, $1, $2); },  
+ 1031673: ($0, $1, $2, $3, $4, $5) => { return eez_mqtt_init($0, UTF8ToString($1), UTF8ToString($2), $3, UTF8ToString($4), UTF8ToString($5)); },  
+ 1031779: ($0, $1) => { return eez_mqtt_deinit($0, $1); },  
+ 1031815: ($0, $1) => { return eez_mqtt_connect($0, $1); },  
+ 1031852: ($0, $1) => { return eez_mqtt_disconnect($0, $1); },  
+ 1031892: ($0, $1, $2) => { return eez_mqtt_subscribe($0, $1, UTF8ToString($2)); },  
+ 1031949: ($0, $1, $2) => { return eez_mqtt_unsubscribe($0, $1, UTF8ToString($2)); },  
+ 1032008: ($0, $1, $2, $3) => { return eez_mqtt_publish($0, $1, UTF8ToString($2), UTF8ToString($3)); }
+>>>>>>> master
 };
 
 // end include: preamble.js

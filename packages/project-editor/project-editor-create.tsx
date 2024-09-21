@@ -84,6 +84,9 @@ import {
     LVGLArcWidget
 } from "project-editor/lvgl/widgets";
 
+// ACTIONS: udp
+import "project-editor/flow/components/actions/udp";
+
 import { Bitmap, getBitmapData } from "project-editor/features/bitmap/bitmap";
 import { Font } from "project-editor/features/font/font";
 import {

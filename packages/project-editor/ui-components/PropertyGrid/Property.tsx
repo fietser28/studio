@@ -7,6 +7,7 @@ import { dialog } from "@electron/remote";
 import { guid } from "eez-studio-shared/guid";
 import { humanize } from "eez-studio-shared/string";
 import { validators, filterNumber } from "eez-studio-shared/validation";
+import { validators as validatorsRenderer } from "eez-studio-shared/validation-renderer";
 
 import { confirm } from "eez-studio-ui/dialog-electron";
 
@@ -393,6 +394,9 @@ export const Property = observer(
         };
 
         onEditUnique = () => {
+            const propertyInfoUnique = (this.props.propertyInfo.unique ||
+                this.props.propertyInfo.uniqueIdentifier)!;
+
             showGenericDialog({
                 dialogDefinition: {
                     fields: [
@@ -404,25 +408,32 @@ export const Property = observer(
                             ),
                             type: "string",
                             validators: [
-                                typeof this.props.propertyInfo.unique ===
-                                "boolean"
+                                typeof propertyInfoUnique === "boolean"
                                     ? validators.unique(
                                           this.props.objects[0],
                                           getParent(this.props.objects[0])
                                       )
-                                    : this.props.propertyInfo.unique!(
+                                    : propertyInfoUnique(
                                           this.props.objects[0],
                                           getParent(this.props.objects[0]),
                                           this.props.propertyInfo
                                       )
-                            ].concat(
-                                isPropertyOptional(
-                                    this.props.objects[0],
-                                    this.props.propertyInfo
+                            ]
+                                .concat(
+                                    isPropertyOptional(
+                                        this.props.objects[0],
+                                        this.props.propertyInfo
+                                    )
+                                        ? []
+                                        : [validators.required]
                                 )
-                                    ? []
-                                    : [validators.required]
-                            )
+                                .concat(
+                                    this.props.propertyInfo.uniqueIdentifier
+                                        ? [
+                                              validatorsRenderer.identifierValidator
+                                          ]
+                                        : []
+                                )
                         }
                     ]
                 },
@@ -544,13 +555,19 @@ export const Property = observer(
                 return (
                     <propertyInfo.propertyGridRowComponent {...this.props} />
                 );
+            } else if (propertyInfo.propertyGridFullRowComponent) {
+                return (
+                    <propertyInfo.propertyGridFullRowComponent
+                        {...this.props}
+                    />
+                );
             } else if (propertyInfo.propertyGridColumnComponent) {
                 return (
                     <propertyInfo.propertyGridColumnComponent {...this.props} />
                 );
             } else if (
                 propertyInfo.type === PropertyType.String &&
-                propertyInfo.unique
+                (propertyInfo.unique || propertyInfo.uniqueIdentifier)
             ) {
                 return (
                     <div className="input-group">

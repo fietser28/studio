@@ -646,6 +646,11 @@
             overflow: hidden;
             pointer-events: none !important;
         }
+
+        audio,
+        video {
+            width: 100%;
+        }
     }
 }
 
@@ -1670,5 +1675,12 @@
 .EezStudio_SessionList {
     .EezStudio_ToolbarHeader {
         background-color: @panelHeaderColor;
+    }
+}
+
+.EezStudio_AudioRecordingDialog {
+    & > canvas {
+        margin-bottom: 10px;
+        border-radius: 30px;
     }
 }

@@ -16,6 +16,7 @@ import type { IDataContext } from "project-editor/flow/flow-interfaces";
 import type { Variable } from "project-editor/features/variable/variable";
 import {
     getArrayElementTypeFromType,
+    getObjectVariableTypeFromType,
     getStructureFromType
 } from "project-editor/features/variable/value-type";
 import { FlowTabState } from "project-editor/flow/flow-tab-state";
@@ -34,6 +35,8 @@ import { getValueLabel } from "project-editor/features/variable/value-type";
 import { stringCompare } from "eez-studio-shared/string";
 
 import { isArray } from "eez-studio-shared/util";
+import type { UserProperty } from "project-editor/flow/user-property";
+import { IObjectVariableValueFieldDescription } from "eez-studio-types";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -302,6 +305,83 @@ const WatchTable = observer(
                     return () => {
                         let structure;
                         if (type) {
+                            const objectVariableType =
+                                getObjectVariableTypeFromType(
+                                    this.props.runtime.projectStore,
+                                    type
+                                );
+
+                            if (objectVariableType) {
+                                value = objectVariableType.getValue(value);
+
+                                const getChildren = (
+                                    value: any,
+                                    valueFieldDescriptions: IObjectVariableValueFieldDescription[]
+                                ): ITreeNode[] => {
+                                    const children: ITreeNode[] = [];
+
+                                    for (const valueFieldDescription of valueFieldDescriptions) {
+                                        const propertyValue =
+                                            valueFieldDescription.getFieldValue(
+                                                value
+                                            );
+
+                                        const name = valueFieldDescription.name;
+
+                                        const valueType =
+                                            valueFieldDescription.valueType;
+
+                                        const valueLabel = (
+                                            <span>
+                                                {getValueLabel(
+                                                    this.props.runtime
+                                                        .projectStore.project,
+                                                    propertyValue,
+                                                    typeof valueType == "string"
+                                                        ? valueType
+                                                        : null
+                                                )}
+                                            </span>
+                                        );
+
+                                        children.push(
+                                            observable({
+                                                id: id + name,
+                                                name,
+                                                nameTitle: name,
+                                                value: valueLabel,
+                                                valueTitle: valueLabel,
+                                                type:
+                                                    typeof valueType == "string"
+                                                        ? valueType
+                                                        : "object",
+
+                                                children:
+                                                    typeof valueType == "string"
+                                                        ? undefined
+                                                        : () =>
+                                                              getChildren(
+                                                                  propertyValue,
+                                                                  valueType
+                                                              ),
+                                                selected: false,
+                                                expanded: this.expanded(
+                                                    id + name,
+                                                    false
+                                                )
+                                            })
+                                        );
+                                    }
+
+                                    return children;
+                                };
+
+                                return getChildren(
+                                    value,
+                                    objectVariableType.valueFieldDescriptions
+                                );
+                            }
+
                             structure = getStructureFromType(
                                 this.props.runtime.projectStore.project,
                                 type
@@ -311,6 +391,7 @@ const WatchTable = observer(
                         let numChildren = 0;
 
                         const children: ITreeNode[] = [];
+
                         for (const name in value) {
                             const propertyValue = value[name];
 
@@ -355,6 +436,7 @@ const WatchTable = observer(
                                 break;
                             }
                         }
+
                         return children;
                     };
                 }
@@ -437,7 +519,10 @@ const WatchTable = observer(
             });
         }
 
-        getVariableTreeNodes = (id: string, variables: Variable[]) => {
+        getVariableTreeNodes = (
+            id: string,
+            variables: (Variable | UserProperty)[]
+        ) => {
             variables = variables.slice();
             variables.sort((a, b) => stringCompare(a.fullName, b.fullName));
             return variables.map(variable => {
@@ -502,7 +587,11 @@ const WatchTable = observer(
 
         get localVariables() {
             const flowState = this.props.runtime.selectedFlowState;
-            if (!flowState || flowState.flow.localVariables.length == 0) {
+            if (!flowState) {
+                return undefined;
+            }
+
+            if (flowState.flow.userPropertiesAndLocalVariables.length == 0) {
                 return undefined;
             }
 
@@ -514,7 +603,7 @@ const WatchTable = observer(
                 children: () =>
                     this.getVariableTreeNodes(
                         "local-variables",
-                        flowState.flow.localVariables
+                        flowState.flow.userPropertiesAndLocalVariables
                     ),
                 selected: false,
                 expanded: this.expanded("local-variables", true)

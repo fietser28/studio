@@ -1,11 +1,21 @@
 import React from "react";
-import { observable, action, makeObservable, runInAction } from "mobx";
+import {
+    observable,
+    action,
+    makeObservable,
+    runInAction,
+    computed
+} from "mobx";
 import { observer } from "mobx-react";
 
 import { dbQuery } from "eez-studio-shared/db-query";
 import { scheduleTask, Priority } from "eez-studio-shared/scheduler";
 
-import { PropertyList, BooleanProperty } from "eez-studio-ui/properties";
+import {
+    PropertyList,
+    BooleanProperty,
+    ButtonProperty
+} from "eez-studio-ui/properties";
 
 import type { IActivityLogEntry } from "instrument/window/history/activity-log";
 
@@ -23,6 +33,7 @@ export class Filters {
     notes: boolean = true;
     launchedScripts: boolean = true;
     tabulators: boolean = true;
+    media: boolean = true;
 
     constructor() {
         makeObservable(this, {
@@ -35,9 +46,26 @@ export class Filters {
             lists: observable,
             notes: observable,
             launchedScripts: observable,
-            tabulators: observable
+            tabulators: observable,
+            media: observable,
+
+            sqlFilter: computed
         });
     }
+
+    setAll = action((value: boolean) => {
+        this.connectsAndDisconnects = value;
+        this.scpi = value;
+        this.downloadedFiles = value;
+        this.uploadedFiles = value;
+        this.attachedFiles = value;
+        this.charts = value;
+        this.lists = value;
+        this.notes = value;
+        this.launchedScripts = value;
+        this.tabulators = value;
+        this.media = value;
+    });
 
     filterActivityLogEntry(activityLogEntry: IActivityLogEntry): boolean {
         if (this.connectsAndDisconnects) {
@@ -116,6 +144,12 @@ export class Filters {
             }
         }
 
+        if (this.media) {
+            if (activityLogEntry.type === "activity-log/media") {
+                return true;
+            }
+        }
+
         return false;
     }
 
@@ -130,16 +164,35 @@ export class Filters {
             this.lists &&
             this.notes &&
             this.launchedScripts &&
-            this.tabulators
+            this.tabulators &&
+            this.media
         );
     }
 
-    getFilter() {
+    get allDeselected() {
+        return !(
+            this.connectsAndDisconnects ||
+            this.scpi ||
+            this.downloadedFiles ||
+            this.uploadedFiles ||
+            this.attachedFiles ||
+            this.charts ||
+            this.lists ||
+            this.notes ||
+            this.launchedScripts ||
+            this.tabulators ||
+            this.media
+        );
+    }
+
+    get sqlFilter() {
         const types: string[] = [];
 
         if (this.allSelected) {
             return "1";
         }
+
+        let additionalCondition = "";
 
         if (this.connectsAndDisconnects) {
             types.push(
@@ -189,9 +242,21 @@ export class Filters {
             types.push("instrument/tabulator");
         }
 
+        if (this.media) {
+            types.push("activity-log/media");
+
+            const typesThatSupportMediaNotes =
+                "type = 'instrument/plotly' or type = 'instrument/tabulator' or type = 'instrument/chart' or type = 'instrument/file-download' or type = 'instrument/file-upload' or type = 'instrument/received'";
+
+            additionalCondition = ` OR (${typesThatSupportMediaNotes}) and json_valid(message) and json_extract(message, '$.mediaNote') is not null`;
+        }
+
         if (types.length > 0) {
             return (
-                "(" + types.map(type => `type == '${type}'`).join(" OR ") + ")"
+                "(" +
+                types.map(type => `type == '${type}'`).join(" OR ") +
+                additionalCondition +
+                ")"
             );
         } else {
             return "0";
@@ -210,6 +275,7 @@ export class FilterStats {
     notes = 0;
     launchedScripts = 0;
     tabulators = 0;
+    media = 0;
 
     constructor(public history: History) {
         makeObservable(this, {
@@ -223,6 +289,7 @@ export class FilterStats {
             notes: observable,
             launchedScripts: observable,
             tabulators: observable,
+            media: observable,
             add: action
         });
 
@@ -241,6 +308,7 @@ export class FilterStats {
             this.notes = 0;
             this.launchedScripts = 0;
             this.tabulators = 0;
+            this.media = 0;
         });
 
         scheduleTask("Get filter stats", Priority.Lowest, async () => {
@@ -297,6 +365,8 @@ export class FilterStats {
             this.launchedScripts += amount;
         } else if (type === "instrument/tabulator") {
             this.tabulators += amount;
+        } else if (type === "activity-log/media") {
+            this.media += amount;
         }
     }
 
@@ -412,6 +482,33 @@ export const FiltersComponent = observer(
                                         value)
                             )}
                         />
+
+                        <BooleanProperty
+                            name={`Audio and video (${filterStats.media})`}
+                            value={this.props.appStore.filters.media}
+                            onChange={action(
+                                (value: boolean) =>
+                                    (this.props.appStore.filters.media = value)
+                            )}
+                        />
+
+                        <ButtonProperty
+                            name="Select All"
+                            className="btn-secondary"
+                            onChange={() =>
+                                this.props.appStore.filters.setAll(true)
+                            }
+                            disabled={this.props.appStore.filters.allSelected}
+                        ></ButtonProperty>
+
+                        <ButtonProperty
+                            name="Deselect All"
+                            className="btn-secondary"
+                            onChange={() =>
+                                this.props.appStore.filters.setAll(false)
+                            }
+                            disabled={this.props.appStore.filters.allDeselected}
+                        ></ButtonProperty>
                     </PropertyList>
                 </div>
             );
