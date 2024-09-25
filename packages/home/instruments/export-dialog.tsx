@@ -18,7 +18,7 @@ import { Icon } from "eez-studio-ui/icon";
 
 import { InstrumentsStore } from "home/instruments";
 
-import { InstrumentObject } from "instrument/instrument-object";
+import { InstrumentObject, instruments } from "instrument/instrument-object";
 import {
     historySessions,
     type IHistorySession
@@ -217,7 +217,13 @@ const SessionList = observer(
         }
 
         get sessions() {
-            return historySessions.sessions.slice(1).map(session => ({
+            let sessions = historySessions.sessions.slice(1);
+
+            sessions = sessions.sort((a, b) =>
+                a.name.toLowerCase().localeCompare(b.name.toLowerCase())
+            );
+
+            return sessions.map(session => ({
                 id: session.id,
                 data: session,
                 selected: false
@@ -254,6 +260,20 @@ const ShortcutNode = observer(
         exportModel: ExportModel;
         shortcut: Shortcut;
     }> {
+        get groupName() {
+            const shortcut = this.props.shortcut;
+            if (shortcut.groupName.startsWith("__instrument__")) {
+                const instrumentId = shortcut.groupName.slice(
+                    "__instrument__".length
+                );
+                const instrument = instruments.get(instrumentId);
+                if (instrument) {
+                    return `instrument "${instrument.name}"`;
+                }
+            }
+            return `group "${shortcut.groupName}"`;
+        }
+
         render() {
             const { exportModel, shortcut } = this.props;
 
@@ -283,7 +303,7 @@ const ShortcutNode = observer(
                                     }
                                 })}
                             />
-                            {shortcut.name}
+                            <b>{shortcut.name}</b> / <i>{this.groupName}</i>
                         </label>
                     }
                 />
@@ -306,17 +326,19 @@ const ShortcutsList = observer(
         }
 
         get shortcuts() {
-            return values(shortcuts)
-                .filter(
-                    shortcut =>
-                        !shortcut.groupName.startsWith("__instrument__") &&
-                        !shortcut.groupName.startsWith("__extension__")
-                )
-                .map(shortcut => ({
-                    id: shortcut.id,
-                    data: shortcut,
-                    selected: false
-                }));
+            let exportShortcuts = values(shortcuts).filter(
+                shortcut => !shortcut.groupName.startsWith("__extension__")
+            );
+
+            exportShortcuts = exportShortcuts.sort((a, b) =>
+                a.name.toLowerCase().localeCompare(b.name.toLowerCase())
+            );
+
+            return exportShortcuts.map(shortcut => ({
+                id: shortcut.id,
+                data: shortcut,
+                selected: false
+            }));
         }
 
         renderShortcutNode = (node: IListNode) => {

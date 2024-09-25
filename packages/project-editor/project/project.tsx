@@ -78,6 +78,7 @@ export { ProjectType } from "project-editor/core/object";
 
 import { isArray } from "eez-studio-shared/util";
 import type { CommandsProtocolType } from "eez-studio-shared/extensions/extension";
+import type { LVGLGroups } from "project-editor/lvgl/groups";
 
 export * from "project-editor/project/assets";
 export * from "project-editor/project/helper";
@@ -709,7 +710,7 @@ export class General extends EezObject {
     minStudioVersion: string;
     resourceFiles: ResourceFile[];
 
-    lockedWidgetLinesOption: "visible" | "dimmed" | "hidden";
+    hiddenWidgetLines: "visible" | "dimmed" | "hidden";
     dimmedLinesOpacity: number;
 
     static classInfo: ClassInfo = {
@@ -919,8 +920,7 @@ export class General extends EezObject {
                 }
             },
             {
-                name: "lockedWidgetLinesOption",
-                displayName: "Lines visibility for hidden widgets",
+                name: "hiddenWidgetLines",
                 type: PropertyType.Enum,
                 enumItems: [
                     { id: "visible", label: "Fully visible" },
@@ -943,7 +943,7 @@ export class General extends EezObject {
                     return (
                         (!general.flowSupport &&
                             general.projectType != ProjectType.DASHBOARD) ||
-                        general.lockedWidgetLinesOption != "dimmed"
+                        general.hiddenWidgetLines != "dimmed"
                     );
                 }
             },
@@ -1136,8 +1136,8 @@ export class General extends EezObject {
                 jsObject.displayBorderRadius = 0;
             }
 
-            if (jsObject.lockedWidgetLinesOption == undefined) {
-                jsObject.lockedWidgetLinesOption = "dimmed";
+            if (jsObject.hiddenWidgetLines == undefined) {
+                jsObject.hiddenWidgetLines = "dimmed";
             }
 
             if (jsObject.dimmedLinesOpacity == undefined) {
@@ -1189,7 +1189,7 @@ export class General extends EezObject {
             minStudioVersion: observable,
             resourceFiles: observable,
             commandsProtocol: observable,
-            lockedWidgetLinesOption: observable,
+            hiddenWidgetLines: observable,
             dimmedLinesOpacity: observable
         });
     }
@@ -1286,6 +1286,14 @@ function getProjectClassInfo() {
                 ) {
                     delete projectJs.styles;
                     delete projectJs.texts;
+
+                    if (!projectJs.lvglGroups) {
+                        projectJs.lvglGroups = {};
+                    }
+
+                    if (!projectJs.lvglGroups.groups) {
+                        projectJs.lvglGroups.groups = [];
+                    }
                 }
 
                 if (projectJs.data) {
@@ -1529,9 +1537,10 @@ function getProjectClassInfo() {
                         if (
                             projectFeature.key == "fonts" ||
                             projectFeature.key == "bitmaps" ||
-                            projectFeature.key == "lvglStyles"
+                            projectFeature.key == "lvglStyles" ||
+                            projectFeature.key == "lvglGroups"
                         ) {
-                            return false;
+                            return true;
                         }
                         if (
                             projectFeature.key == "styles" ||
@@ -1545,7 +1554,10 @@ function getProjectClassInfo() {
                             return true;
                         }
                     } else {
-                        if (projectFeature.key == "lvglStyles") {
+                        if (
+                            projectFeature.key == "lvglStyles" ||
+                            projectFeature.key == "lvglGroups"
+                        ) {
                             return true;
                         }
                     }
@@ -1589,6 +1601,7 @@ export class Project extends EezObject {
     userWidgets: Page[];
     styles: Style[];
     lvglStyles: LVGLStyles;
+    lvglGroups: LVGLGroups;
     bitmaps: Bitmap[];
     fonts: Font[];
     texts: Texts;
@@ -1635,6 +1648,8 @@ export class Project extends EezObject {
             userPages: observable,
             userWidgets: observable,
             styles: observable,
+            lvglStyles: observable,
+            lvglGroups: observable,
             fonts: observable,
             texts: observable,
             readme: observable,
@@ -1888,6 +1903,14 @@ export class Project extends EezObject {
             LayoutModels.STYLES_TAB,
             FlexLayout.DockLocation.RIGHT,
             this.styles != undefined || this.lvglStyles != undefined
+        );
+
+        enableTabOnBorder(
+            this._store.layoutModels.rootEditor,
+            LayoutModels.LVGL_GROUPS_TAB_ID,
+            LayoutModels.LVGL_GROUPS_TAB,
+            FlexLayout.DockLocation.RIGHT,
+            this.lvglGroups != undefined
         );
 
         enableTabOnBorder(

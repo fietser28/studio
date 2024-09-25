@@ -58,6 +58,7 @@ export class LayoutModels extends AbstractLayoutModels {
     static CHANGES_TAB_ID = "changes";
     static MICRO_PYTHON_TAB_ID = "micro-python";
     static README_TAB_ID = "readme";
+    static LVGL_GROUPS_TAB_ID = "lvgl-groups";
 
     static PAGES_TAB: FlexLayout.IJsonTabNode = {
         type: "tab",
@@ -174,6 +175,15 @@ export class LayoutModels extends AbstractLayoutModels {
         component: "breakpointsPanel"
     };
 
+    static LVGL_GROUPS_TAB: FlexLayout.IJsonTabNode = {
+        type: "tab",
+        enableClose: false,
+        name: "Groups",
+        id: LayoutModels.LVGL_GROUPS_TAB_ID,
+        component: "lvgl-groups",
+        icon: "material:view_compact"
+    };
+
     static iconFactory = (node: FlexLayout.TabNode) => {
         let icon = node.getIcon();
         if (!icon || typeof icon != "string") {
@@ -200,6 +210,7 @@ export class LayoutModels extends AbstractLayoutModels {
     themes: FlexLayout.Model;
     scpi: FlexLayout.Model;
     texts: FlexLayout.Model;
+    lvglGroups: FlexLayout.Model;
 
     constructor(public projectStore: ProjectStore) {
         super();
@@ -235,8 +246,9 @@ export class LayoutModels extends AbstractLayoutModels {
                 LayoutModels.STYLES_TAB,
                 LayoutModels.FONTS_TAB,
                 LayoutModels.BITMAPS_TAB,
-                LayoutModels.BREAKPOINTS_TAB,
-                LayoutModels.THEMES_TAB
+                LayoutModels.THEMES_TAB,
+                LayoutModels.LVGL_GROUPS_TAB,
+                LayoutModels.BREAKPOINTS_TAB
             ]
         });
 
@@ -356,7 +368,7 @@ export class LayoutModels extends AbstractLayoutModels {
         return [
             {
                 name: "rootEditor",
-                version: 113,
+                version: 115,
                 json: {
                     global: LayoutModels.GLOBAL_OPTIONS,
                     borders: this.borders,
@@ -977,6 +989,58 @@ export class LayoutModels extends AbstractLayoutModels {
                 },
                 get: () => this.texts,
                 set: action(model => (this.texts = model))
+            },
+            {
+                name: "lvglGroups",
+                version: 3,
+                json: {
+                    global: LayoutModels.GLOBAL_OPTIONS,
+                    borders: [],
+                    layout: {
+                        type: "row",
+                        children: [
+                            {
+                                type: "row",
+                                children: [
+                                    {
+                                        type: "tabset",
+                                        enableTabStrip: true,
+                                        enableDrag: false,
+                                        enableDrop: false,
+                                        enableClose: false,
+                                        weight: 50,
+                                        children: [
+                                            {
+                                                type: "tab",
+                                                enableClose: false,
+                                                name: "Groups",
+                                                component: "groups"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        type: "tabset",
+                                        enableTabStrip: true,
+                                        enableDrag: false,
+                                        enableDrop: false,
+                                        enableClose: false,
+                                        weight: 50,
+                                        children: [
+                                            {
+                                                type: "tab",
+                                                enableClose: false,
+                                                name: "Group Widgets",
+                                                component: "order"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                },
+                get: () => this.lvglGroups,
+                set: action(model => (this.lvglGroups = model))
             }
         ];
     }
