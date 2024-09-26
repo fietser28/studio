@@ -1,9 +1,15 @@
+import React from "react";
+import { observer } from "mobx-react";
+import Select from "react-select";
+
 import { isArray } from "eez-studio-shared/util";
 
 import {
     EezObject,
+    EnumItem,
     IEezObject,
     PropertyInfo,
+    PropertyProps,
     PropertyType
 } from "project-editor/core/object";
 
@@ -30,6 +36,7 @@ import {
     LV_LAYOUT_NONE
 } from "project-editor/lvgl/lvgl-constants";
 import { ProjectEditor } from "project-editor/project-editor-interface";
+import { getEnumItems } from "project-editor/ui-components/PropertyGrid/Property";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -94,7 +101,8 @@ function makeEnumPropertyInfo(
     displayName: string,
     lvglStyleProp: LVGLStyleProp,
     enumItemToCodeOrStringArray: { [key: string]: number } | string[],
-    buildPrefix: string
+    buildPrefix: string,
+    propertyGridColumnComponent?: React.ComponentType<PropertyProps>
 ): LVGLPropertyInfo {
     let enumItemToCode: { [key: string]: number };
     if (isArray(enumItemToCodeOrStringArray)) {
@@ -122,12 +130,19 @@ function makeEnumPropertyInfo(
             label: id
         })),
         enumDisallowUndefined: true,
+        propertyGridColumnComponent,
         lvglStyleProp: Object.assign(lvglStyleProp, {
             buildPrefix,
             enumItemToCodeOrStringArray,
-            valueRead: (value: number) => codeToEnumItem[value.toString()],
-            valueToNum: (value: string) => enumItemToCode[value.toString()],
-            valueBuild: (value: string) => buildPrefix + value
+            valueRead: lvglStyleProp.valueRead
+                ? lvglStyleProp.valueRead
+                : (value: number) => codeToEnumItem[value.toString()],
+            valueToNum: lvglStyleProp.valueToNum
+                ? lvglStyleProp.valueToNum
+                : (value: string) => enumItemToCode[value.toString()],
+            valueBuild: lvglStyleProp.valueBuild
+                ? lvglStyleProp.valueBuild
+                : (value: string) => buildPrefix + value
         })
     };
 }
@@ -1032,6 +1047,133 @@ export const border_width_property_info: LVGLPropertyInfo = {
         extDraw: false
     }
 };
+
+const BorderSide = observer(
+    class BorderSide extends React.Component<PropertyProps> {
+        changeValue(newValue: any) {
+            this.props.updateObject({
+                [this.props.propertyInfo.name]: newValue
+            });
+        }
+
+        render() {
+            const { objects, propertyInfo, readOnly } = this.props;
+
+            let enumItems: EnumItem[];
+
+            if (propertyInfo.enumItems) {
+                enumItems = getEnumItems(this.props.objects, propertyInfo);
+            } else {
+                enumItems = [];
+            }
+
+            const options = enumItems.map(enumItem => ({
+                value: enumItem.id.toString(),
+                label: (enumItem.label || enumItem.id).toString()
+            }));
+
+            let propertyValue = (objects[0] as any)[propertyInfo.name];
+            for (let i = 1; i < objects.length; i++) {
+                if ((objects[i] as any)[propertyInfo.name] != propertyValue) {
+                    propertyValue = undefined;
+                }
+            }
+
+            let selectedValues: any;
+            let isMulti = false;
+
+            if (propertyValue != undefined) {
+                if (propertyValue == "NONE") {
+                    selectedValues = [options[0]];
+                } else if (propertyValue == "FULL") {
+                    selectedValues = [options[5]];
+                } else if (propertyValue == "INTERNAL") {
+                    selectedValues = [options[6]];
+                } else {
+                    selectedValues = [];
+
+                    propertyValue
+                        .toString()
+                        .split("|")
+                        .forEach((part: string) => {
+                            if (part == "BOTTOM") {
+                                selectedValues.push(options[1]);
+                            } else if (part == "TOP") {
+                                selectedValues.push(options[2]);
+                            } else if (part == "LEFT") {
+                                selectedValues.push(options[3]);
+                            } else if (part == "RIGHT") {
+                                selectedValues.push(options[4]);
+                            }
+                        });
+
+                    isMulti = true;
+                }
+            } else {
+                selectedValues = [];
+            }
+
+            return (
+                <Select
+                    options={options}
+                    isMulti={isMulti}
+                    onChange={selectedValues => {
+                        if (!Array.isArray(selectedValues)) {
+                            selectedValues = [selectedValues];
+                        }
+
+                        let propertyValue = "";
+
+                        if (selectedValues.length == 0) {
+                            propertyValue = "NONE";
+                        } else if (
+                            selectedValues[selectedValues.length - 1].value ==
+                            "NONE"
+                        ) {
+                            propertyValue = "NONE";
+                        } else if (
+                            selectedValues[selectedValues.length - 1].value ==
+                            "FULL"
+                        ) {
+                            propertyValue = "FULL";
+                        } else if (
+                            selectedValues[selectedValues.length - 1].value ==
+                            "INTERNAL"
+                        ) {
+                            propertyValue = "INTERNAL";
+                        } else {
+                            for (let i = 0; i < selectedValues.length; i++) {
+                                if (
+                                    selectedValues[i].value == "BOTTOM" ||
+                                    selectedValues[i].value == "TOP" ||
+                                    selectedValues[i].value == "LEFT" ||
+                                    selectedValues[i].value == "RIGHT"
+                                ) {
+                                    propertyValue =
+                                        (propertyValue
+                                            ? propertyValue + "|"
+                                            : "") + selectedValues[i].value;
+                                }
+                            }
+                        }
+
+                        if (!propertyValue) {
+                            propertyValue = "NONE";
+                        }
+
+                        this.changeValue(propertyValue);
+                    }}
+                    isDisabled={readOnly}
+                    isClearable={false}
+                    value={selectedValues}
+                    menuPortalTarget={document.body}
+                    menuPosition="fixed"
+                />
+            );
+        }
+    }
+);
+
 const border_side_property_info = makeEnumPropertyInfo(
     "border_side",
     "Side",
@@ -1042,7 +1184,111 @@ const border_side_property_info = makeEnumPropertyInfo(
         defaultValue: "LV_BORDER_SIDE_NONE",
         inherited: false,
         layout: false,
-        extDraw: false
+        extDraw: false,
+
+        valueRead: (value: number) => {
+            if (value == 0x00) {
+                return "NONE";
+            }
+
+            if (value == 0x0f) {
+                return "FULL";
+            }
+
+            if (value == 0x10) {
+                return "INTERNAL";
+            }
+
+            let propertyValue = "";
+
+            if (value & 0x01) {
+                propertyValue =
+                    (propertyValue ? propertyValue + "|" : "") + "BOTTOM";
+            }
+
+            if (value & 0x02) {
+                propertyValue =
+                    (propertyValue ? propertyValue + "|" : "") + "TOP";
+            }
+
+            if (value & 0x04) {
+                propertyValue =
+                    (propertyValue ? propertyValue + "|" : "") + "LEFT";
+            }
+
+            if (value & 0x08) {
+                propertyValue =
+                    (propertyValue ? propertyValue + "|" : "") + "RIGHT";
+            }
+
+            return propertyValue;
+        },
+        valueToNum: (value: string) => {
+            if (value == "NONE") {
+                return 0;
+            }
+
+            if (value == "FULL") {
+                return 0x0f;
+            }
+
+            if (value == "INTERNAL") {
+                return 0x10;
+            }
+
+            let num = 0;
+
+            if (value.indexOf("BOTTOM") != -1) {
+                num |= 0x01;
+            }
+
+            if (value.indexOf("TOP") != -1) {
+                num |= 0x02;
+            }
+
+            if (value.indexOf("LEFT") != -1) {
+                num |= 0x04;
+            }
+
+            if (value.indexOf("RIGHT") != -1) {
+                num |= 0x08;
+            }
+
+            return num;
+        },
+        valueBuild: (value: string) => {
+            if (value == "NONE") {
+                return "LV_BORDER_SIDE_NONE";
+            }
+
+            if (value == "FULL") {
+                return "LV_BORDER_SIDE_FULL";
+            }
+
+            if (value == "INTERNAL") {
+                return "LV_BORDER_SIDE_INTERNAL";
+            }
+
+            let build = "";
+
+            if (value.indexOf("BOTTOM") != -1) {
+                build = (build ? build + "|" : "") + "LV_BORDER_SIDE_BOTTOM";
+            }
+
+            if (value.indexOf("TOP") != -1) {
+                build = (build ? build + "|" : "") + "LV_BORDER_SIDE_TOP";
+            }
+
+            if (value.indexOf("LEFT") != -1) {
+                build = (build ? build + "|" : "") + "LV_BORDER_SIDE_LEFT";
+            }
+
+            if (value.indexOf("RIGHT") != -1) {
+                build = (build ? build + "|" : "") + "LV_BORDER_SIDE_RIGHT";
+            }
+
+            return build;
+        }
     },
     {
         NONE: 0x00,
@@ -1053,8 +1299,10 @@ const border_side_property_info = makeEnumPropertyInfo(
         FULL: 0x0f,
         INTERNAL: 0x10 // FOR matrix-like objects (e.g. Button matrix)
     },
-    "LV_BORDER_SIDE_"
+    "LV_BORDER_SIDE_",
+    BorderSide
 );
+
 const border_post_property_info: LVGLPropertyInfo = {
     name: "border_post",
     displayName: "Post",
@@ -1503,6 +1751,113 @@ const text_line_space_property_info: LVGLPropertyInfo = {
         extDraw: false
     }
 };
+
+const TextDecorationSide = observer(
+    class TextDecorationSide extends React.Component<PropertyProps> {
+        changeValue(newValue: any) {
+            this.props.updateObject({
+                [this.props.propertyInfo.name]: newValue
+            });
+        }
+
+        render() {
+            const { objects, propertyInfo, readOnly } = this.props;
+
+            let enumItems: EnumItem[];
+
+            if (propertyInfo.enumItems) {
+                enumItems = getEnumItems(this.props.objects, propertyInfo);
+            } else {
+                enumItems = [];
+            }
+
+            const options = enumItems.map(enumItem => ({
+                value: enumItem.id.toString(),
+                label: (enumItem.label || enumItem.id).toString()
+            }));
+
+            let propertyValue = (objects[0] as any)[propertyInfo.name];
+            for (let i = 1; i < objects.length; i++) {
+                if ((objects[i] as any)[propertyInfo.name] != propertyValue) {
+                    propertyValue = undefined;
+                }
+            }
+
+            let selectedValues: any;
+            let isMulti = false;
+
+            if (propertyValue != undefined) {
+                if (propertyValue == "NONE") {
+                    selectedValues = [options[0]];
+                } else {
+                    selectedValues = [];
+
+                    propertyValue
+                        .toString()
+                        .split("|")
+                        .forEach((part: string) => {
+                            if (part == "UNDERLINE") {
+                                selectedValues.push(options[1]);
+                            } else if (part == "STRIKETHROUGH") {
+                                selectedValues.push(options[2]);
+                            }
+                        });
+
+                    isMulti = true;
+                }
+            } else {
+                selectedValues = [];
+            }
+
+            return (
+                <Select
+                    options={options}
+                    isMulti={isMulti}
+                    onChange={selectedValues => {
+                        if (!Array.isArray(selectedValues)) {
+                            selectedValues = [selectedValues];
+                        }
+
+                        let propertyValue = "";
+
+                        if (selectedValues.length == 0) {
+                            propertyValue = "NONE";
+                        } else if (
+                            selectedValues[selectedValues.length - 1].value ==
+                            "NONE"
+                        ) {
+                            propertyValue = "NONE";
+                        } else {
+                            for (let i = 0; i < selectedValues.length; i++) {
+                                if (
+                                    selectedValues[i].value == "UNDERLINE" ||
+                                    selectedValues[i].value == "STRIKETHROUGH"
+                                ) {
+                                    propertyValue =
+                                        (propertyValue
+                                            ? propertyValue + "|"
+                                            : "") + selectedValues[i].value;
+                                }
+                            }
+                        }
+
+                        if (!propertyValue) {
+                            propertyValue = "NONE";
+                        }
+
+                        this.changeValue(propertyValue);
+                    }}
+                    isDisabled={readOnly}
+                    isClearable={false}
+                    value={selectedValues}
+                    menuPortalTarget={document.body}
+                    menuPosition="fixed"
+                />
+            );
+        }
+    }
+);
+
 const text_decor_property_info = makeEnumPropertyInfo(
     "text_decor",
     "Decoration",
@@ -1513,11 +1868,69 @@ const text_decor_property_info = makeEnumPropertyInfo(
         defaultValue: "LV_TEXT_DECOR_NONE",
         inherited: true,
         layout: false,
-        extDraw: false
+        extDraw: false,
+
+        valueRead: (value: number) => {
+            if (value == 0x00) {
+                return "NONE";
+            }
+
+            let propertyValue = "";
+
+            if (value & 0x01) {
+                propertyValue =
+                    (propertyValue ? propertyValue + "|" : "") + "UNDERLINE";
+            }
+
+            if (value & 0x02) {
+                propertyValue =
+                    (propertyValue ? propertyValue + "|" : "") +
+                    "STRIKETHROUGH";
+            }
+
+            return propertyValue;
+        },
+        valueToNum: (value: string) => {
+            if (value == "NONE") {
+                return 0;
+            }
+
+            let num = 0;
+
+            if (value.indexOf("UNDERLINE") != -1) {
+                num |= 0x01;
+            }
+
+            if (value.indexOf("STRIKETHROUGH") != -1) {
+                num |= 0x02;
+            }
+
+            return num;
+        },
+        valueBuild: (value: string) => {
+            if (value == "NONE") {
+                return "LV_TEXT_DECOR_NONE";
+            }
+
+            let build = "";
+
+            if (value.indexOf("BOTTOM") != -1) {
+                build = (build ? build + "|" : "") + "LV_TEXT_DECOR_UNDERLINE";
+            }
+
+            if (value.indexOf("TOP") != -1) {
+                build =
+                    (build ? build + "|" : "") + "LV_TEXT_DECOR_STRIKETHROUGH";
+            }
+
+            return build;
+        }
     },
     ["NONE", "UNDERLINE", "STRIKETHROUGH"],
-    "LV_TEXT_DECOR_"
+    "LV_TEXT_DECOR_",
+    TextDecorationSide
 );
+
 const text_align_property_info = makeEnumPropertyInfo(
     "text_align",
     "Align",
