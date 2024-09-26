@@ -889,6 +889,7 @@ function dbg(...args) {
 var ASM_CONSTS = {
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
   1033784: ($0) => { startToDebuggerMessage($0); },  
  1033816: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
  1033891: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
@@ -934,6 +935,22 @@ var ASM_CONSTS = {
  1031924: ($0, $1, $2) => { return eez_mqtt_subscribe($0, $1, UTF8ToString($2)); },  
  1031981: ($0, $1, $2) => { return eez_mqtt_unsubscribe($0, $1, UTF8ToString($2)); },  
  1032040: ($0, $1, $2, $3) => { return eez_mqtt_publish($0, $1, UTF8ToString($2), UTF8ToString($3)); }
+>>>>>>> master
+=======
+  1031416: ($0) => { startToDebuggerMessage($0); },  
+ 1031448: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
+ 1031523: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
+ 1031598: ($0) => { finishToDebuggerMessage($0); },  
+ 1031631: ($0, $1) => { return getLvglImageByName($0, UTF8ToString($1)); },  
+ 1031684: ($0, $1, $2) => { lvglObjAddStyle($0, $1, $2); },  
+ 1031717: ($0, $1, $2) => { lvglObjRemoveStyle($0, $1, $2); },  
+ 1031753: ($0, $1, $2, $3, $4, $5) => { return eez_mqtt_init($0, UTF8ToString($1), UTF8ToString($2), $3, UTF8ToString($4), UTF8ToString($5)); },  
+ 1031859: ($0, $1) => { return eez_mqtt_deinit($0, $1); },  
+ 1031895: ($0, $1) => { return eez_mqtt_connect($0, $1); },  
+ 1031932: ($0, $1) => { return eez_mqtt_disconnect($0, $1); },  
+ 1031972: ($0, $1, $2) => { return eez_mqtt_subscribe($0, $1, UTF8ToString($2)); },  
+ 1032029: ($0, $1, $2) => { return eez_mqtt_unsubscribe($0, $1, UTF8ToString($2)); },  
+ 1032088: ($0, $1, $2, $3) => { return eez_mqtt_publish($0, $1, UTF8ToString($2), UTF8ToString($3)); }
 >>>>>>> master
 };
 
@@ -4592,7 +4609,8 @@ var _fflush = createExportWrapper('fflush', 1);
 var _strerror = createExportWrapper('strerror', 1);
 =======
 var ___wasm_call_ctors = createExportWrapper('__wasm_call_ctors');
-var _lvglSetKeyboardGroupSameAsEncoder = Module['_lvglSetKeyboardGroupSameAsEncoder'] = createExportWrapper('lvglSetKeyboardGroupSameAsEncoder');
+var _lvglSetEncoderGroup = Module['_lvglSetEncoderGroup'] = createExportWrapper('lvglSetEncoderGroup');
+var _lvglSetKeyboardGroup = Module['_lvglSetKeyboardGroup'] = createExportWrapper('lvglSetKeyboardGroup');
 var _init = Module['_init'] = createExportWrapper('init');
 var _malloc = Module['_malloc'] = createExportWrapper('malloc');
 var _mainLoop = Module['_mainLoop'] = createExportWrapper('mainLoop');
@@ -4605,9 +4623,9 @@ var _stopScript = Module['_stopScript'] = createExportWrapper('stopScript');
 var _onMessageFromDebugger = Module['_onMessageFromDebugger'] = createExportWrapper('onMessageFromDebugger');
 var _lvglGetFlowState = Module['_lvglGetFlowState'] = createExportWrapper('lvglGetFlowState');
 var _setDebuggerMessageSubsciptionFilter = Module['_setDebuggerMessageSubsciptionFilter'] = createExportWrapper('setDebuggerMessageSubsciptionFilter');
+var _lvglCreateGroup = Module['_lvglCreateGroup'] = createExportWrapper('lvglCreateGroup');
 var _lvglAddScreenLoadedEventHandler = Module['_lvglAddScreenLoadedEventHandler'] = createExportWrapper('lvglAddScreenLoadedEventHandler');
-var _lvglEncoderGroupAddObject = Module['_lvglEncoderGroupAddObject'] = createExportWrapper('lvglEncoderGroupAddObject');
-var _lvglKeyboardGroupAddObject = Module['_lvglKeyboardGroupAddObject'] = createExportWrapper('lvglKeyboardGroupAddObject');
+var _lvglGroupAddObject = Module['_lvglGroupAddObject'] = createExportWrapper('lvglGroupAddObject');
 var _lvglCreateScreen = Module['_lvglCreateScreen'] = createExportWrapper('lvglCreateScreen');
 var _lvglCreateContainer = Module['_lvglCreateContainer'] = createExportWrapper('lvglCreateContainer');
 var _lvglCreateLabel = Module['_lvglCreateLabel'] = createExportWrapper('lvglCreateLabel');
