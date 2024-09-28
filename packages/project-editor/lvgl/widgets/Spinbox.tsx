@@ -41,6 +41,21 @@ export const LVGL_SPINBOX_STEP_DIRECTION: { [key: string]: number } = {
 };
 
 export class LVGLSpinboxWidget extends LVGLWidget {
+    digitCount: number;
+    digitCountType: LVGLPropertyType;
+    separatorPosition: number;
+    separatorPositionType: LVGLPropertyType;
+    min: number;
+    minType: LVGLPropertyType;
+    max: number;
+    maxType: LVGLPropertyType;
+    rollover: boolean;
+    stepDirection: string;
+    step: number | string;
+    stepType: LVGLPropertyType;
+    value: number | string;
+    valueType: LVGLPropertyType;
+
     static classInfo = makeDerivedClassInfo(LVGLWidget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType === ProjectType.LVGL,
@@ -148,10 +163,10 @@ export class LVGLSpinboxWidget extends LVGLWidget {
             valueType: "literal"
         },
 
-        beforeLoadHook(
+        beforeLoadHook: (
             object: LVGLSpinboxWidget,
             jsObject: Partial<LVGLSpinboxWidget>
-        ) {
+        ) => {
             if (jsObject.digitCount == undefined) {
                 jsObject.digitCount = 5;
             }
@@ -222,20 +237,6 @@ export class LVGLSpinboxWidget extends LVGLWidget {
         }
     });
 
-    digitCount: number;
-    digitCountType: LVGLPropertyType;
-    separatorPosition: number;
-    separatorPositionType: LVGLPropertyType;
-    min: number;
-    minType: LVGLPropertyType;
-    max: number;
-    maxType: LVGLPropertyType;
-    rollover: boolean;
-    stepDirection: string;
-    step: number | string;
-    stepType: LVGLPropertyType;
-    value: number | string;
-    valueType: LVGLPropertyType;
 
     override makeEditable() {
         super.makeEditable();
@@ -257,17 +258,18 @@ export class LVGLSpinboxWidget extends LVGLWidget {
             valueType: observable
         });
     }
-
-    override getIsAccessibleFromSourceCode() {
-        return (
-            this.digitCountType == "expression" ||
-            this.separatorPositionType == "expression" ||
-            this.minType == "expression" ||
-            this.maxType == "expression" ||
-            this.valueType == "expression" ||
-            this.stepType == "expression"
-        );
-    }
+    /*
+        override getIsAccessibleFromSourceCode() {
+            return (
+                this.digitCountType == "expression" ||
+                this.separatorPositionType == "expression" ||
+                this.minType == "expression" ||
+                this.maxType == "expression" ||
+                this.valueType == "expression" ||
+                this.stepType == "expression"
+            );
+        }
+    */
 
     override get hasEventHandler() {
         return (
@@ -564,6 +566,13 @@ export class LVGLSpinboxWidget extends LVGLWidget {
     }
 
     override buildEventHandlerSpecific(build: LVGLBuild) {
+        expressionPropertyBuildEventHandlerSpecific<LVGLSpinboxWidget>(
+            build,
+            this,
+            "separatorPosition" as const,
+            "lv_spinbox_get_sxtep"
+        );
+
         expressionPropertyBuildEventHandlerSpecific<LVGLSpinboxWidget>(
             build,
             this,
