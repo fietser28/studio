@@ -887,71 +887,20 @@ function dbg(...args) {
 // === Body ===
 
 var ASM_CONSTS = {
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-  1033784: ($0) => { startToDebuggerMessage($0); },  
- 1033816: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
- 1033891: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
- 1033966: ($0) => { finishToDebuggerMessage($0); },  
- 1033999: ($0, $1) => { return getLvglImageByName($0, UTF8ToString($1)); },  
- 1034052: ($0, $1, $2) => { lvglObjAddStyle($0, $1, $2); },  
- 1034085: ($0, $1, $2) => { lvglObjRemoveStyle($0, $1, $2); },  
- 1034121: ($0, $1, $2, $3, $4, $5) => { return eez_mqtt_init($0, UTF8ToString($1), UTF8ToString($2), $3, UTF8ToString($4), UTF8ToString($5)); },  
- 1034227: ($0, $1) => { return eez_mqtt_deinit($0, $1); },  
- 1034263: ($0, $1) => { return eez_mqtt_connect($0, $1); },  
- 1034300: ($0, $1) => { return eez_mqtt_disconnect($0, $1); },  
- 1034340: ($0, $1, $2) => { return eez_mqtt_subscribe($0, $1, UTF8ToString($2)); },  
- 1034397: ($0, $1, $2) => { return eez_mqtt_unsubscribe($0, $1, UTF8ToString($2)); },  
- 1034456: ($0, $1, $2, $3) => { return eez_mqtt_publish($0, $1, UTF8ToString($2), UTF8ToString($3)); }
-=======
-  1031336: ($0) => { startToDebuggerMessage($0); },  
- 1031368: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
- 1031443: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
- 1031518: ($0) => { finishToDebuggerMessage($0); },  
- 1031551: ($0, $1) => { return getLvglImageByName($0, UTF8ToString($1)); },  
- 1031604: ($0, $1, $2) => { lvglObjAddStyle($0, $1, $2); },  
- 1031637: ($0, $1, $2) => { lvglObjRemoveStyle($0, $1, $2); },  
- 1031673: ($0, $1, $2, $3, $4, $5) => { return eez_mqtt_init($0, UTF8ToString($1), UTF8ToString($2), $3, UTF8ToString($4), UTF8ToString($5)); },  
- 1031779: ($0, $1) => { return eez_mqtt_deinit($0, $1); },  
- 1031815: ($0, $1) => { return eez_mqtt_connect($0, $1); },  
- 1031852: ($0, $1) => { return eez_mqtt_disconnect($0, $1); },  
- 1031892: ($0, $1, $2) => { return eez_mqtt_subscribe($0, $1, UTF8ToString($2)); },  
- 1031949: ($0, $1, $2) => { return eez_mqtt_unsubscribe($0, $1, UTF8ToString($2)); },  
- 1032008: ($0, $1, $2, $3) => { return eez_mqtt_publish($0, $1, UTF8ToString($2), UTF8ToString($3)); }
->>>>>>> master
-=======
-  1031368: ($0) => { startToDebuggerMessage($0); },  
- 1031400: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
- 1031475: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
- 1031550: ($0) => { finishToDebuggerMessage($0); },  
- 1031583: ($0, $1) => { return getLvglImageByName($0, UTF8ToString($1)); },  
- 1031636: ($0, $1, $2) => { lvglObjAddStyle($0, $1, $2); },  
- 1031669: ($0, $1, $2) => { lvglObjRemoveStyle($0, $1, $2); },  
- 1031705: ($0, $1, $2, $3, $4, $5) => { return eez_mqtt_init($0, UTF8ToString($1), UTF8ToString($2), $3, UTF8ToString($4), UTF8ToString($5)); },  
- 1031811: ($0, $1) => { return eez_mqtt_deinit($0, $1); },  
- 1031847: ($0, $1) => { return eez_mqtt_connect($0, $1); },  
- 1031884: ($0, $1) => { return eez_mqtt_disconnect($0, $1); },  
- 1031924: ($0, $1, $2) => { return eez_mqtt_subscribe($0, $1, UTF8ToString($2)); },  
- 1031981: ($0, $1, $2) => { return eez_mqtt_unsubscribe($0, $1, UTF8ToString($2)); },  
- 1032040: ($0, $1, $2, $3) => { return eez_mqtt_publish($0, $1, UTF8ToString($2), UTF8ToString($3)); }
->>>>>>> master
-=======
-  1031416: ($0) => { startToDebuggerMessage($0); },  
- 1031448: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
- 1031523: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
- 1031598: ($0) => { finishToDebuggerMessage($0); },  
- 1031631: ($0, $1) => { return getLvglImageByName($0, UTF8ToString($1)); },  
- 1031684: ($0, $1, $2) => { lvglObjAddStyle($0, $1, $2); },  
- 1031717: ($0, $1, $2) => { lvglObjRemoveStyle($0, $1, $2); },  
- 1031753: ($0, $1, $2, $3, $4, $5) => { return eez_mqtt_init($0, UTF8ToString($1), UTF8ToString($2), $3, UTF8ToString($4), UTF8ToString($5)); },  
- 1031859: ($0, $1) => { return eez_mqtt_deinit($0, $1); },  
- 1031895: ($0, $1) => { return eez_mqtt_connect($0, $1); },  
- 1031932: ($0, $1) => { return eez_mqtt_disconnect($0, $1); },  
- 1031972: ($0, $1, $2) => { return eez_mqtt_subscribe($0, $1, UTF8ToString($2)); },  
- 1032029: ($0, $1, $2) => { return eez_mqtt_unsubscribe($0, $1, UTF8ToString($2)); },  
- 1032088: ($0, $1, $2, $3) => { return eez_mqtt_publish($0, $1, UTF8ToString($2), UTF8ToString($3)); }
->>>>>>> master
+  1034136: ($0) => { startToDebuggerMessage($0); },  
+ 1034168: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
+ 1034243: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
+ 1034318: ($0) => { finishToDebuggerMessage($0); },  
+ 1034351: ($0, $1) => { return getLvglImageByName($0, UTF8ToString($1)); },  
+ 1034404: ($0, $1, $2) => { lvglObjAddStyle($0, $1, $2); },  
+ 1034437: ($0, $1, $2) => { lvglObjRemoveStyle($0, $1, $2); },  
+ 1034473: ($0, $1, $2, $3, $4, $5) => { return eez_mqtt_init($0, UTF8ToString($1), UTF8ToString($2), $3, UTF8ToString($4), UTF8ToString($5)); },  
+ 1034579: ($0, $1) => { return eez_mqtt_deinit($0, $1); },  
+ 1034615: ($0, $1) => { return eez_mqtt_connect($0, $1); },  
+ 1034652: ($0, $1) => { return eez_mqtt_disconnect($0, $1); },  
+ 1034692: ($0, $1, $2) => { return eez_mqtt_subscribe($0, $1, UTF8ToString($2)); },  
+ 1034749: ($0, $1, $2) => { return eez_mqtt_unsubscribe($0, $1, UTF8ToString($2)); },  
+ 1034808: ($0, $1, $2, $3) => { return eez_mqtt_publish($0, $1, UTF8ToString($2), UTF8ToString($3)); }
 };
 
 // end include: preamble.js
@@ -4471,8 +4420,9 @@ var wasmImports = {
   fd_write: _fd_write
 };
 var wasmExports = createWasm();
-<<<<<<< HEAD
 var ___wasm_call_ctors = createExportWrapper('__wasm_call_ctors', 0);
+var _lvglSetEncoderGroup = Module['_lvglSetEncoderGroup'] = createExportWrapper('lvglSetEncoderGroup', 1);
+var _lvglSetKeyboardGroup = Module['_lvglSetKeyboardGroup'] = createExportWrapper('lvglSetKeyboardGroup', 1);
 var _init = Module['_init'] = createExportWrapper('init', 8);
 var _malloc = Module['_malloc'] = createExportWrapper('malloc', 1);
 var _mainLoop = Module['_mainLoop'] = createExportWrapper('mainLoop', 0);
@@ -4480,10 +4430,14 @@ var _getSyncedBuffer = Module['_getSyncedBuffer'] = createExportWrapper('getSync
 var _isRTL = Module['_isRTL'] = createExportWrapper('isRTL', 0);
 var _onPointerEvent = Module['_onPointerEvent'] = createExportWrapper('onPointerEvent', 3);
 var _onMouseWheelEvent = Module['_onMouseWheelEvent'] = createExportWrapper('onMouseWheelEvent', 2);
+var _onKeyPressed = Module['_onKeyPressed'] = createExportWrapper('onKeyPressed', 1);
 var _stopScript = Module['_stopScript'] = createExportWrapper('stopScript', 0);
 var _onMessageFromDebugger = Module['_onMessageFromDebugger'] = createExportWrapper('onMessageFromDebugger', 2);
 var _lvglGetFlowState = Module['_lvglGetFlowState'] = createExportWrapper('lvglGetFlowState', 2);
 var _setDebuggerMessageSubsciptionFilter = Module['_setDebuggerMessageSubsciptionFilter'] = createExportWrapper('setDebuggerMessageSubsciptionFilter', 1);
+var _lvglCreateGroup = Module['_lvglCreateGroup'] = createExportWrapper('lvglCreateGroup', 0);
+var _lvglAddScreenLoadedEventHandler = Module['_lvglAddScreenLoadedEventHandler'] = createExportWrapper('lvglAddScreenLoadedEventHandler', 1);
+var _lvglGroupAddObject = Module['_lvglGroupAddObject'] = createExportWrapper('lvglGroupAddObject', 3);
 var _lvglCreateScreen = Module['_lvglCreateScreen'] = createExportWrapper('lvglCreateScreen', 6);
 var _lvglCreateContainer = Module['_lvglCreateContainer'] = createExportWrapper('lvglCreateContainer', 6);
 var _lvglCreateLabel = Module['_lvglCreateLabel'] = createExportWrapper('lvglCreateLabel', 9);
@@ -4500,6 +4454,7 @@ var _lvglCreateRoller = Module['_lvglCreateRoller'] = createExportWrapper('lvglC
 var _lvglCreateSwitch = Module['_lvglCreateSwitch'] = createExportWrapper('lvglCreateSwitch', 6);
 var _lvglCreateBar = Module['_lvglCreateBar'] = createExportWrapper('lvglCreateBar', 11);
 var _lvglCreateDropdown = Module['_lvglCreateDropdown'] = createExportWrapper('lvglCreateDropdown', 9);
+var _lvglDropdownGetList = Module['_lvglDropdownGetList'] = createExportWrapper('lvglDropdownGetList', 2);
 var _lvglCreateArc = Module['_lvglCreateArc'] = createExportWrapper('lvglCreateArc', 13);
 var _lvglCreateSpinner = Module['_lvglCreateSpinner'] = createExportWrapper('lvglCreateSpinner', 6);
 var _lvglCreateCheckbox = Module['_lvglCreateCheckbox'] = createExportWrapper('lvglCreateCheckbox', 7);
@@ -4540,13 +4495,13 @@ var _lvglObjClearFlag = Module['_lvglObjClearFlag'] = createExportWrapper('lvglO
 var _lvglObjHasFlag = Module['_lvglObjHasFlag'] = createExportWrapper('lvglObjHasFlag', 2);
 var _lvglObjAddState = Module['_lvglObjAddState'] = createExportWrapper('lvglObjAddState', 2);
 var _lvglObjClearState = Module['_lvglObjClearState'] = createExportWrapper('lvglObjClearState', 2);
-var _lvglObjGetStylePropColor = Module['_lvglObjGetStylePropColor'] = createExportWrapper('lvglObjGetStylePropColor', 3);
-var _lvglObjGetStylePropNum = Module['_lvglObjGetStylePropNum'] = createExportWrapper('lvglObjGetStylePropNum', 3);
+var _lvglObjGetStylePropColor = Module['_lvglObjGetStylePropColor'] = createExportWrapper('lvglObjGetStylePropColor', 4);
+var _lvglObjGetStylePropNum = Module['_lvglObjGetStylePropNum'] = createExportWrapper('lvglObjGetStylePropNum', 4);
 var _lvglObjSetLocalStylePropColor = Module['_lvglObjSetLocalStylePropColor'] = createExportWrapper('lvglObjSetLocalStylePropColor', 4);
 var _lvglObjSetLocalStylePropNum = Module['_lvglObjSetLocalStylePropNum'] = createExportWrapper('lvglObjSetLocalStylePropNum', 4);
 var _lvglObjSetLocalStylePropPtr = Module['_lvglObjSetLocalStylePropPtr'] = createExportWrapper('lvglObjSetLocalStylePropPtr', 4);
-var _lvglObjGetStylePropBuiltInFont = Module['_lvglObjGetStylePropBuiltInFont'] = createExportWrapper('lvglObjGetStylePropBuiltInFont', 3);
-var _lvglObjGetStylePropFontAddr = Module['_lvglObjGetStylePropFontAddr'] = createExportWrapper('lvglObjGetStylePropFontAddr', 3);
+var _lvglObjGetStylePropBuiltInFont = Module['_lvglObjGetStylePropBuiltInFont'] = createExportWrapper('lvglObjGetStylePropBuiltInFont', 4);
+var _lvglObjGetStylePropFontAddr = Module['_lvglObjGetStylePropFontAddr'] = createExportWrapper('lvglObjGetStylePropFontAddr', 4);
 var _lvglObjSetLocalStylePropBuiltInFont = Module['_lvglObjSetLocalStylePropBuiltInFont'] = createExportWrapper('lvglObjSetLocalStylePropBuiltInFont', 4);
 var _lvglStyleCreate = Module['_lvglStyleCreate'] = createExportWrapper('lvglStyleCreate', 0);
 var _lvglStyleSetPropColor = Module['_lvglStyleSetPropColor'] = createExportWrapper('lvglStyleSetPropColor', 3);
@@ -4596,6 +4551,8 @@ var _lvglSetTimelinePosition = Module['_lvglSetTimelinePosition'] = createExport
 var _lvglClearTimeline = Module['_lvglClearTimeline'] = createExportWrapper('lvglClearTimeline', 0);
 var _lvglSetScrollBarMode = Module['_lvglSetScrollBarMode'] = createExportWrapper('lvglSetScrollBarMode', 2);
 var _lvglSetScrollDir = Module['_lvglSetScrollDir'] = createExportWrapper('lvglSetScrollDir', 2);
+var _lvglSetScrollSnapX = Module['_lvglSetScrollSnapX'] = createExportWrapper('lvglSetScrollSnapX', 2);
+var _lvglSetScrollSnapY = Module['_lvglSetScrollSnapY'] = createExportWrapper('lvglSetScrollSnapY', 2);
 var _lvglTabviewSetActive = Module['_lvglTabviewSetActive'] = createExportWrapper('lvglTabviewSetActive', 3);
 var _lvglTabviewGetTabBar = Module['_lvglTabviewGetTabBar'] = createExportWrapper('lvglTabviewGetTabBar', 2);
 var _lvglTabviewGetTabContent = Module['_lvglTabviewGetTabContent'] = createExportWrapper('lvglTabviewGetTabContent', 2);
@@ -4607,146 +4564,6 @@ var _lvglGetScrollY = Module['_lvglGetScrollY'] = createExportWrapper('lvglGetSc
 var _onMqttEvent = Module['_onMqttEvent'] = createExportWrapper('onMqttEvent', 4);
 var _fflush = createExportWrapper('fflush', 1);
 var _strerror = createExportWrapper('strerror', 1);
-=======
-var ___wasm_call_ctors = createExportWrapper('__wasm_call_ctors');
-var _lvglSetEncoderGroup = Module['_lvglSetEncoderGroup'] = createExportWrapper('lvglSetEncoderGroup');
-var _lvglSetKeyboardGroup = Module['_lvglSetKeyboardGroup'] = createExportWrapper('lvglSetKeyboardGroup');
-var _init = Module['_init'] = createExportWrapper('init');
-var _malloc = Module['_malloc'] = createExportWrapper('malloc');
-var _mainLoop = Module['_mainLoop'] = createExportWrapper('mainLoop');
-var _getSyncedBuffer = Module['_getSyncedBuffer'] = createExportWrapper('getSyncedBuffer');
-var _isRTL = Module['_isRTL'] = createExportWrapper('isRTL');
-var _onPointerEvent = Module['_onPointerEvent'] = createExportWrapper('onPointerEvent');
-var _onMouseWheelEvent = Module['_onMouseWheelEvent'] = createExportWrapper('onMouseWheelEvent');
-var _onKeyPressed = Module['_onKeyPressed'] = createExportWrapper('onKeyPressed');
-var _stopScript = Module['_stopScript'] = createExportWrapper('stopScript');
-var _onMessageFromDebugger = Module['_onMessageFromDebugger'] = createExportWrapper('onMessageFromDebugger');
-var _lvglGetFlowState = Module['_lvglGetFlowState'] = createExportWrapper('lvglGetFlowState');
-var _setDebuggerMessageSubsciptionFilter = Module['_setDebuggerMessageSubsciptionFilter'] = createExportWrapper('setDebuggerMessageSubsciptionFilter');
-var _lvglCreateGroup = Module['_lvglCreateGroup'] = createExportWrapper('lvglCreateGroup');
-var _lvglAddScreenLoadedEventHandler = Module['_lvglAddScreenLoadedEventHandler'] = createExportWrapper('lvglAddScreenLoadedEventHandler');
-var _lvglGroupAddObject = Module['_lvglGroupAddObject'] = createExportWrapper('lvglGroupAddObject');
-var _lvglCreateScreen = Module['_lvglCreateScreen'] = createExportWrapper('lvglCreateScreen');
-var _lvglCreateContainer = Module['_lvglCreateContainer'] = createExportWrapper('lvglCreateContainer');
-var _lvglCreateLabel = Module['_lvglCreateLabel'] = createExportWrapper('lvglCreateLabel');
-var _free = Module['_free'] = createExportWrapper('free');
-var _lvglCreateButton = Module['_lvglCreateButton'] = createExportWrapper('lvglCreateButton');
-var _lvglCreateButtonMatrix = Module['_lvglCreateButtonMatrix'] = createExportWrapper('lvglCreateButtonMatrix');
-var _lvglCreatePanel = Module['_lvglCreatePanel'] = createExportWrapper('lvglCreatePanel');
-var _lvglCreateUserWidget = Module['_lvglCreateUserWidget'] = createExportWrapper('lvglCreateUserWidget');
-var _lvglCreateImage = Module['_lvglCreateImage'] = createExportWrapper('lvglCreateImage');
-var _lvglSetImageSrc = Module['_lvglSetImageSrc'] = createExportWrapper('lvglSetImageSrc');
-var _lvglCreateLine = Module['_lvglCreateLine'] = createExportWrapper('lvglCreateLine');
-var _lvglCreateSlider = Module['_lvglCreateSlider'] = createExportWrapper('lvglCreateSlider');
-var _lvglCreateRoller = Module['_lvglCreateRoller'] = createExportWrapper('lvglCreateRoller');
-var _lvglCreateSwitch = Module['_lvglCreateSwitch'] = createExportWrapper('lvglCreateSwitch');
-var _lvglCreateBar = Module['_lvglCreateBar'] = createExportWrapper('lvglCreateBar');
-var _lvglCreateDropdown = Module['_lvglCreateDropdown'] = createExportWrapper('lvglCreateDropdown');
-var _lvglDropdownGetList = Module['_lvglDropdownGetList'] = createExportWrapper('lvglDropdownGetList');
-var _lvglCreateArc = Module['_lvglCreateArc'] = createExportWrapper('lvglCreateArc');
-var _lvglCreateSpinner = Module['_lvglCreateSpinner'] = createExportWrapper('lvglCreateSpinner');
-var _lvglCreateCheckbox = Module['_lvglCreateCheckbox'] = createExportWrapper('lvglCreateCheckbox');
-var _lvglCreateTextarea = Module['_lvglCreateTextarea'] = createExportWrapper('lvglCreateTextarea');
-var _lvglCreateCalendar = Module['_lvglCreateCalendar'] = createExportWrapper('lvglCreateCalendar');
-var _lvglCreateColorwheel = Module['_lvglCreateColorwheel'] = createExportWrapper('lvglCreateColorwheel');
-var _lvglCreateImgbutton = Module['_lvglCreateImgbutton'] = createExportWrapper('lvglCreateImgbutton');
-var _lvglCreateKeyboard = Module['_lvglCreateKeyboard'] = createExportWrapper('lvglCreateKeyboard');
-var _lvglCreateChart = Module['_lvglCreateChart'] = createExportWrapper('lvglCreateChart');
-var _lvglCreateMeter = Module['_lvglCreateMeter'] = createExportWrapper('lvglCreateMeter');
-var _lvglCreateScale = Module['_lvglCreateScale'] = createExportWrapper('lvglCreateScale');
-var _lvglCreateTabview = Module['_lvglCreateTabview'] = createExportWrapper('lvglCreateTabview');
-var _lvglTabviewAddTab = Module['_lvglTabviewAddTab'] = createExportWrapper('lvglTabviewAddTab');
-var _lvglCreateAnimationImage = Module['_lvglCreateAnimationImage'] = createExportWrapper('lvglCreateAnimationImage');
-var _lvglCreateCanvas = Module['_lvglCreateCanvas'] = createExportWrapper('lvglCreateCanvas');
-var _lvglCreateLed = Module['_lvglCreateLed'] = createExportWrapper('lvglCreateLed');
-var _lvglUpdateLedColor = Module['_lvglUpdateLedColor'] = createExportWrapper('lvglUpdateLedColor');
-var _lvglUpdateLedBrightness = Module['_lvglUpdateLedBrightness'] = createExportWrapper('lvglUpdateLedBrightness');
-var _lvglCreateList = Module['_lvglCreateList'] = createExportWrapper('lvglCreateList');
-var _lvglCreateLottie = Module['_lvglCreateLottie'] = createExportWrapper('lvglCreateLottie');
-var _lvglCreateMenu = Module['_lvglCreateMenu'] = createExportWrapper('lvglCreateMenu');
-var _lvglCreateMessageBox = Module['_lvglCreateMessageBox'] = createExportWrapper('lvglCreateMessageBox');
-var _lvglCreateSpan = Module['_lvglCreateSpan'] = createExportWrapper('lvglCreateSpan');
-var _lvglCreateSpinbox = Module['_lvglCreateSpinbox'] = createExportWrapper('lvglCreateSpinbox');
-var _lvglUpdateSpinboxValue = Module['_lvglUpdateSpinboxValue'] = createExportWrapper('lvglUpdateSpinboxValue');
-var _lvglUpdateSpinboxStep = Module['_lvglUpdateSpinboxStep'] = createExportWrapper('lvglUpdateSpinboxStep');
-var _lvglCreateTable = Module['_lvglCreateTable'] = createExportWrapper('lvglCreateTable');
-var _lvglCreateTileView = Module['_lvglCreateTileView'] = createExportWrapper('lvglCreateTileView');
-var _lvglCreateWindow = Module['_lvglCreateWindow'] = createExportWrapper('lvglCreateWindow');
-var _lvglScreenLoad = Module['_lvglScreenLoad'] = createExportWrapper('lvglScreenLoad');
-var _lvglDeleteObject = Module['_lvglDeleteObject'] = createExportWrapper('lvglDeleteObject');
-var _lvglObjAddFlag = Module['_lvglObjAddFlag'] = createExportWrapper('lvglObjAddFlag');
-var _lvglObjClearFlag = Module['_lvglObjClearFlag'] = createExportWrapper('lvglObjClearFlag');
-var _lvglObjHasFlag = Module['_lvglObjHasFlag'] = createExportWrapper('lvglObjHasFlag');
-var _lvglObjAddState = Module['_lvglObjAddState'] = createExportWrapper('lvglObjAddState');
-var _lvglObjClearState = Module['_lvglObjClearState'] = createExportWrapper('lvglObjClearState');
-var _lvglObjGetStylePropColor = Module['_lvglObjGetStylePropColor'] = createExportWrapper('lvglObjGetStylePropColor');
-var _lvglObjGetStylePropNum = Module['_lvglObjGetStylePropNum'] = createExportWrapper('lvglObjGetStylePropNum');
-var _lvglObjSetLocalStylePropColor = Module['_lvglObjSetLocalStylePropColor'] = createExportWrapper('lvglObjSetLocalStylePropColor');
-var _lvglObjSetLocalStylePropNum = Module['_lvglObjSetLocalStylePropNum'] = createExportWrapper('lvglObjSetLocalStylePropNum');
-var _lvglObjSetLocalStylePropPtr = Module['_lvglObjSetLocalStylePropPtr'] = createExportWrapper('lvglObjSetLocalStylePropPtr');
-var _lvglObjGetStylePropBuiltInFont = Module['_lvglObjGetStylePropBuiltInFont'] = createExportWrapper('lvglObjGetStylePropBuiltInFont');
-var _lvglObjGetStylePropFontAddr = Module['_lvglObjGetStylePropFontAddr'] = createExportWrapper('lvglObjGetStylePropFontAddr');
-var _lvglObjSetLocalStylePropBuiltInFont = Module['_lvglObjSetLocalStylePropBuiltInFont'] = createExportWrapper('lvglObjSetLocalStylePropBuiltInFont');
-var _lvglStyleCreate = Module['_lvglStyleCreate'] = createExportWrapper('lvglStyleCreate');
-var _lvglStyleSetPropColor = Module['_lvglStyleSetPropColor'] = createExportWrapper('lvglStyleSetPropColor');
-var _lvglSetStylePropBuiltInFont = Module['_lvglSetStylePropBuiltInFont'] = createExportWrapper('lvglSetStylePropBuiltInFont');
-var _lvglSetStylePropPtr = Module['_lvglSetStylePropPtr'] = createExportWrapper('lvglSetStylePropPtr');
-var _lvglSetStylePropNum = Module['_lvglSetStylePropNum'] = createExportWrapper('lvglSetStylePropNum');
-var _lvglStyleDelete = Module['_lvglStyleDelete'] = createExportWrapper('lvglStyleDelete');
-var _lvglObjAddStyle = Module['_lvglObjAddStyle'] = createExportWrapper('lvglObjAddStyle');
-var _lvglObjRemoveStyle = Module['_lvglObjRemoveStyle'] = createExportWrapper('lvglObjRemoveStyle');
-var _lvglGetObjRelX = Module['_lvglGetObjRelX'] = createExportWrapper('lvglGetObjRelX');
-var _lvglGetObjRelY = Module['_lvglGetObjRelY'] = createExportWrapper('lvglGetObjRelY');
-var _lvglGetObjWidth = Module['_lvglGetObjWidth'] = createExportWrapper('lvglGetObjWidth');
-var _lvglGetObjHeight = Module['_lvglGetObjHeight'] = createExportWrapper('lvglGetObjHeight');
-var _lvglLoadFont = Module['_lvglLoadFont'] = createExportWrapper('lvglLoadFont');
-var _lvglFreeFont = Module['_lvglFreeFont'] = createExportWrapper('lvglFreeFont');
-var _lvglAddObjectFlowCallback = Module['_lvglAddObjectFlowCallback'] = createExportWrapper('lvglAddObjectFlowCallback');
-var _lvglUpdateLabelText = Module['_lvglUpdateLabelText'] = createExportWrapper('lvglUpdateLabelText');
-var _lvglSetImgbuttonImageSrc = Module['_lvglSetImgbuttonImageSrc'] = createExportWrapper('lvglSetImgbuttonImageSrc');
-var _lvglSetKeyboardTextarea = Module['_lvglSetKeyboardTextarea'] = createExportWrapper('lvglSetKeyboardTextarea');
-var _lvglMeterAddScale = Module['_lvglMeterAddScale'] = createExportWrapper('lvglMeterAddScale');
-var _lvglMeterAddIndicatorNeedleImg = Module['_lvglMeterAddIndicatorNeedleImg'] = createExportWrapper('lvglMeterAddIndicatorNeedleImg');
-var _lvglMeterAddIndicatorNeedleLine = Module['_lvglMeterAddIndicatorNeedleLine'] = createExportWrapper('lvglMeterAddIndicatorNeedleLine');
-var _lvglMeterAddIndicatorScaleLines = Module['_lvglMeterAddIndicatorScaleLines'] = createExportWrapper('lvglMeterAddIndicatorScaleLines');
-var _lvglMeterAddIndicatorArc = Module['_lvglMeterAddIndicatorArc'] = createExportWrapper('lvglMeterAddIndicatorArc');
-var _lvglUpdateMeterIndicatorValue = Module['_lvglUpdateMeterIndicatorValue'] = createExportWrapper('lvglUpdateMeterIndicatorValue');
-var _lvglUpdateMeterIndicatorStartValue = Module['_lvglUpdateMeterIndicatorStartValue'] = createExportWrapper('lvglUpdateMeterIndicatorStartValue');
-var _lvglUpdateMeterIndicatorEndValue = Module['_lvglUpdateMeterIndicatorEndValue'] = createExportWrapper('lvglUpdateMeterIndicatorEndValue');
-var _lvglUpdateDropdownOptions = Module['_lvglUpdateDropdownOptions'] = createExportWrapper('lvglUpdateDropdownOptions');
-var _lvglUpdateDropdownSelected = Module['_lvglUpdateDropdownSelected'] = createExportWrapper('lvglUpdateDropdownSelected');
-var _lvglUpdateRollerOptions = Module['_lvglUpdateRollerOptions'] = createExportWrapper('lvglUpdateRollerOptions');
-var _lvglUpdateRollerSelected = Module['_lvglUpdateRollerSelected'] = createExportWrapper('lvglUpdateRollerSelected');
-var _lvglUpdateSliderValue = Module['_lvglUpdateSliderValue'] = createExportWrapper('lvglUpdateSliderValue');
-var _lvglUpdateSliderValueLeft = Module['_lvglUpdateSliderValueLeft'] = createExportWrapper('lvglUpdateSliderValueLeft');
-var _lvglUpdateBarValue = Module['_lvglUpdateBarValue'] = createExportWrapper('lvglUpdateBarValue');
-var _lvglUpdateBarValueStart = Module['_lvglUpdateBarValueStart'] = createExportWrapper('lvglUpdateBarValueStart');
-var _lvglUpdateArcRangeMin = Module['_lvglUpdateArcRangeMin'] = createExportWrapper('lvglUpdateArcRangeMin');
-var _lvglUpdateArcRangeMax = Module['_lvglUpdateArcRangeMax'] = createExportWrapper('lvglUpdateArcRangeMax');
-var _lvglUpdateArcValue = Module['_lvglUpdateArcValue'] = createExportWrapper('lvglUpdateArcValue');
-var _lvglUpdateTextareaText = Module['_lvglUpdateTextareaText'] = createExportWrapper('lvglUpdateTextareaText');
-var _lvglUpdateCheckedState = Module['_lvglUpdateCheckedState'] = createExportWrapper('lvglUpdateCheckedState');
-var _lvglUpdateDisabledState = Module['_lvglUpdateDisabledState'] = createExportWrapper('lvglUpdateDisabledState');
-var _lvglUpdateHiddenFlag = Module['_lvglUpdateHiddenFlag'] = createExportWrapper('lvglUpdateHiddenFlag');
-var _lvglUpdateClickableFlag = Module['_lvglUpdateClickableFlag'] = createExportWrapper('lvglUpdateClickableFlag');
-var _lvglUpdateTabName = Module['_lvglUpdateTabName'] = createExportWrapper('lvglUpdateTabName');
-var _lvglAddTimelineKeyframe = Module['_lvglAddTimelineKeyframe'] = createExportWrapper('lvglAddTimelineKeyframe');
-var _lvglSetTimelinePosition = Module['_lvglSetTimelinePosition'] = createExportWrapper('lvglSetTimelinePosition');
-var _lvglClearTimeline = Module['_lvglClearTimeline'] = createExportWrapper('lvglClearTimeline');
-var _lvglSetScrollBarMode = Module['_lvglSetScrollBarMode'] = createExportWrapper('lvglSetScrollBarMode');
-var _lvglSetScrollDir = Module['_lvglSetScrollDir'] = createExportWrapper('lvglSetScrollDir');
-var _lvglTabviewSetActive = Module['_lvglTabviewSetActive'] = createExportWrapper('lvglTabviewSetActive');
-var _lvglTabviewGetTabBar = Module['_lvglTabviewGetTabBar'] = createExportWrapper('lvglTabviewGetTabBar');
-var _lvglTabviewGetTabContent = Module['_lvglTabviewGetTabContent'] = createExportWrapper('lvglTabviewGetTabContent');
-var _lvglLineSetPoints = Module['_lvglLineSetPoints'] = createExportWrapper('lvglLineSetPoints');
-var _lvglLineSetYInvert = Module['_lvglLineSetYInvert'] = createExportWrapper('lvglLineSetYInvert');
-var _lvglScrollTo = Module['_lvglScrollTo'] = createExportWrapper('lvglScrollTo');
-var _lvglGetScrollX = Module['_lvglGetScrollX'] = createExportWrapper('lvglGetScrollX');
-var _lvglGetScrollY = Module['_lvglGetScrollY'] = createExportWrapper('lvglGetScrollY');
-var _onMqttEvent = Module['_onMqttEvent'] = createExportWrapper('onMqttEvent');
-var ___errno_location = createExportWrapper('__errno_location');
-var _fflush = Module['_fflush'] = createExportWrapper('fflush');
->>>>>>> master
 var _emscripten_stack_init = () => (_emscripten_stack_init = wasmExports['emscripten_stack_init'])();
 var _emscripten_stack_get_free = () => (_emscripten_stack_get_free = wasmExports['emscripten_stack_get_free'])();
 var _emscripten_stack_get_base = () => (_emscripten_stack_get_base = wasmExports['emscripten_stack_get_base'])();

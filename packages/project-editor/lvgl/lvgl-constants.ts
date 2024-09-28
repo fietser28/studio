@@ -187,6 +187,14 @@ export const LV_FLEX_ALIGN_SPACE_EVENLY = 3;
 export const LV_FLEX_ALIGN_SPACE_AROUND = 4;
 export const LV_FLEX_ALIGN_SPACE_BETWEEN = 5;
 
+export const LV_GRID_ALIGN_START = 0;
+export const LV_GRID_ALIGN_CENTER = 1;
+export const LV_GRID_ALIGN_END = 2;
+export const LV_GRID_ALIGN_STRETCH = 3;
+export const LV_GRID_ALIGN_SPACE_EVENLY = 4;
+export const LV_GRID_ALIGN_SPACE_AROUND = 5;
+export const LV_GRID_ALIGN_SPACE_BETWEEN = 6;
+
 const LV_SCROLLBAR_MODE_OFF = 0;
 const LV_SCROLLBAR_MODE_ON = 1;
 const LV_SCROLLBAR_MODE_ACTIVE = 2;
@@ -244,6 +252,20 @@ export const LVGL_SCROLL_DIRECTION: { [key: string]: number } = {
 
 export const LV_ANIM_OFF = 0;
 export const LV_ANIM_ON = 1;
+
+////////////////////////////////////////////////////////////////////////////////
+
+const LV_SCROLL_SNAP_NONE = 0;
+const LV_SCROLL_SNAP_START = 1;
+const LV_SCROLL_SNAP_END = 2;
+const LV_SCROLL_SNAP_CENTER = 3;
+
+export const LVGL_SCROLL_SNAP: { [key: string]: number } = {
+    none: LV_SCROLL_SNAP_NONE,
+    start: LV_SCROLL_SNAP_START,
+    end: LV_SCROLL_SNAP_END,
+    center: LV_SCROLL_SNAP_CENTER
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 
