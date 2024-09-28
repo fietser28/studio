@@ -908,8 +908,8 @@ EM_PORT_API(void) lvglAddObjectFlowCallback(lv_obj_t *obj, lv_event_code_t filte
         lv_obj_add_event_cb(obj, flow_event_spinbox_value_changed_callback, LV_EVENT_VALUE_CHANGED, data);
     } else if (filter == LV_EVENT_SPINBOX_STEP_CHANGED) {
         lv_obj_add_event_cb(obj, flow_event_spinbox_step_changed_callback, LV_EVENT_VALUE_CHANGED, data);
-    } else if (filter == LV_EVENT_SPINBOX_SEPARATOR_CHANGED) {
-        lv_obj_add_event_cb(obj, flow_event_spinbox_separator_position_changed_callback, LV_EVENT_VALUE_CHANGED, data);
+    //} else if (filter == LV_EVENT_SPINBOX_SEPARATOR_CHANGED) {
+    //    lv_obj_add_event_cb(obj, flow_event_spinbox_separator_position_changed_callback, LV_EVENT_VALUE_CHANGED, data);
     } else {
         lv_obj_add_event_cb(obj, flow_event_callback, filter, data);
     }

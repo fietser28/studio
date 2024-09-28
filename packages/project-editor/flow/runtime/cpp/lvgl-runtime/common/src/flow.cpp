@@ -599,7 +599,7 @@ void flow_event_spinbox_step_changed_callback(lv_event_t *e) {
         }
     }
 }
-
+/*
 void flow_event_spinbox_min_changed_callback(lv_event_t *e) {
     lv_event_code_t event = lv_event_get_code(e);
     if (event == LV_EVENT_VALUE_CHANGED) {
@@ -654,7 +654,7 @@ void flow_event_spinbox_separator_position_changed_callback(lv_event_t *e) {
         }
     }
 }
-
+*/
 
 void flow_event_checked_callback(lv_event_t *e) {
     lv_event_code_t event = lv_event_get_code(e);
