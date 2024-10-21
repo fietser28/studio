@@ -569,13 +569,6 @@ export class LVGLSpinboxWidget extends LVGLWidget {
         expressionPropertyBuildEventHandlerSpecific<LVGLSpinboxWidget>(
             build,
             this,
-            "separatorPosition" as const,
-            "lv_spinbox_get_sxtep"
-        );
-
-        expressionPropertyBuildEventHandlerSpecific<LVGLSpinboxWidget>(
-            build,
-            this,
             "step" as const,
             "lv_spinbox_get_step"
         );
