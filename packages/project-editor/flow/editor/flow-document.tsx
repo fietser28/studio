@@ -1,5 +1,6 @@
-import { computed, makeObservable } from "mobx";
+import { computed, makeObservable, runInAction } from "mobx";
 import { intersection } from "lodash";
+import { MenuItem } from "@electron/remote";
 
 import type { Point, Rect } from "eez-studio-shared/geometry";
 import type { IDocument } from "project-editor/flow/flow-interfaces";
@@ -22,6 +23,7 @@ import { Component } from "project-editor/flow/component";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import type { Page } from "project-editor/features/page/page";
 import { canPasteWithDependencies } from "project-editor/store/paste-with-dependencies";
+import { PageTabState } from "project-editor/features/page/PageEditor";
 
 export class FlowDocument implements IDocument {
     constructor(
@@ -153,7 +155,121 @@ export class FlowDocument implements IDocument {
     }
 
     createContextMenu(objects: TreeObjectAdapter[]) {
-        return this.flow.createSelectionContextMenu();
+        return this.flow.createSelectionContextMenu(
+            {
+                add: false
+            },
+            undefined,
+            this.flow.object instanceof ProjectEditor.PageClass &&
+                objects.length == 0
+                ? [
+                      new MenuItem({
+                          label: "Center View",
+                          click: async () => {
+                              this.flowContext.viewState.centerView();
+                          }
+                      }),
+                      new MenuItem({
+                          label: "Center View on All Pages",
+                          click: async () => {
+                              this.flowContext.viewState.centerView();
+
+                              for (const page of this.projectStore.project
+                                  .pages) {
+                                  if (page != this.flow.object) {
+                                      const editor =
+                                          this.projectStore.editorsStore.getEditorByObject(
+                                              page
+                                          );
+                                      if (editor?.state) {
+                                          const pageTabState =
+                                              editor.state as PageTabState;
+
+                                          pageTabState.centerView();
+                                      } else {
+                                          let uiState =
+                                              this.projectStore.uiStateStore.getObjectUIState(
+                                                  page,
+                                                  "flow-state"
+                                              );
+
+                                          if (!uiState) {
+                                              uiState = {};
+                                          }
+
+                                          uiState.transform = {
+                                              translate: {
+                                                  x: this.flowContext.viewState
+                                                      .transform.translate.x,
+                                                  y: this.flowContext.viewState
+                                                      .transform.translate.y
+                                              },
+                                              scale:
+                                                  uiState.transform?.scale ??
+                                                  this.flowContext.viewState
+                                                      .transform.scale
+                                          };
+
+                                          runInAction(() => {
+                                              this.projectStore.uiStateStore.updateObjectUIState(
+                                                  page,
+                                                  "flow-state",
+                                                  uiState
+                                              );
+                                          });
+                                      }
+                                  }
+                              }
+                          }
+                      }),
+                      ...(this.projectStore.uiStateStore.globalFlowZoom
+                          ? []
+                          : [
+                                new MenuItem({
+                                    label: "Set the Same Zoom for All Pages",
+                                    click: async () => {
+                                        for (const page of this.projectStore
+                                            .project.pages) {
+                                            if (page != this.flow.object) {
+                                                let uiState =
+                                                    this.projectStore.uiStateStore.getObjectUIState(
+                                                        page,
+                                                        "flow-state"
+                                                    );
+
+                                                if (!uiState) {
+                                                    uiState = {};
+                                                }
+
+                                                uiState.transform = {
+                                                    translate: {
+                                                        x: this.flowContext
+                                                            .viewState.transform
+                                                            .translate.x,
+                                                        y: this.flowContext
+                                                            .viewState.transform
+                                                            .translate.y
+                                                    },
+                                                    scale: this.flowContext
+                                                        .viewState.transform
+                                                        .scale
+                                                };
+
+                                                runInAction(() => {
+                                                    this.projectStore.uiStateStore.updateObjectUIState(
+                                                        page,
+                                                        "flow-state",
+                                                        uiState
+                                                    );
+                                                });
+                                            }
+                                        }
+                                    }
+                                })
+                            ])
+                  ]
+                : undefined
+        );
     }
 
     duplicateSelection = () => {

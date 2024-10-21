@@ -144,10 +144,6 @@ export class LVGLTabWidget extends LVGLWidget {
         return "both";
     }
 
-    override getIsAccessibleFromSourceCode() {
-        return this.tabNameType == "expression";
-    }
-
     override get relativePosition() {
         const relativePosition = super.relativePosition;
 
@@ -241,7 +237,7 @@ export class LVGLTabWidget extends LVGLWidget {
                     build.line(
                         `lv_obj_t *obj = lv_tabview_add_tab(${parentObj}, _(${escapeCString(
                             this.tabName ?? ""
-                        )});`
+                        )}));`
                     );
                 } else {
                     build.line(

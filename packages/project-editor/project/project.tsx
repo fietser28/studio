@@ -270,6 +270,7 @@ export class Build extends EezObject {
     configurations: BuildConfiguration[];
     files: BuildFile[];
     destinationFolder?: string;
+    separateFolderForImagesAndFonts?: boolean;
     lvglInclude: string;
     generateSourceCodeForEezFramework: boolean;
     compressFlowDefinition: boolean;
@@ -298,6 +299,13 @@ export class Build extends EezObject {
             {
                 name: "destinationFolder",
                 type: PropertyType.RelativeFolder
+            },
+            {
+                name: "separateFolderForImagesAndFonts",
+                displayName: "Store image and font files in a separate folder",
+                checkboxStyleSwitch: true,
+                type: PropertyType.Boolean,
+                disabled: isNotLVGLProject
             },
             {
                 name: "lvglInclude",
@@ -362,6 +370,10 @@ export class Build extends EezObject {
             if (jsObject.expressionEvaluatorStackSize == undefined) {
                 jsObject.expressionEvaluatorStackSize = 20;
             }
+
+            if (jsObject.separateFolderForImagesAndFonts == undefined) {
+                jsObject.separateFolderForImagesAndFonts = false;
+            }
         },
 
         updateObjectValueHook: (build: Build, values: Partial<Build>) => {
@@ -387,6 +399,7 @@ export class Build extends EezObject {
             configurations: observable,
             files: observable,
             destinationFolder: observable,
+            separateFolderForImagesAndFonts: observable,
             lvglInclude: observable,
             generateSourceCodeForEezFramework: observable,
             compressFlowDefinition: observable,
@@ -1274,6 +1287,11 @@ function getProjectClassInfo() {
                 typeClass: Theme,
                 partOfNavigation: false,
                 hideInPropertyGrid: true
+            },
+            {
+                name: "themesVersion",
+                type: PropertyType.Number,
+                hideInPropertyGrid: true
             }
         ];
 
@@ -1284,6 +1302,12 @@ function getProjectClassInfo() {
                 if (
                     projectJs.settings.general.projectType == ProjectType.LVGL
                 ) {
+                    if (projectJs.themesVersion == undefined) {
+                        projectJs.themesVersion = 1;
+                        projectJs.themes = [{ name: "Default" }];
+                        projectJs.colors = [];
+                    }
+
                     delete projectJs.styles;
                     delete projectJs.texts;
 
@@ -1612,8 +1636,10 @@ export class Project extends EezObject {
     micropython: MicroPython;
     extensionDefinitions: ExtensionDefinition[];
     changes: Changes;
+
     colors: Color[];
     themes: Theme[];
+    themesVersion: number;
 
     constructor() {
         super();
@@ -1934,7 +1960,7 @@ export class Project extends EezObject {
             LayoutModels.THEMES_TAB_ID,
             LayoutModels.THEMES_TAB,
             FlexLayout.DockLocation.RIGHT,
-            !this.projectTypeTraits.isLVGL
+            true //!this.projectTypeTraits.isLVGL
         );
 
         enableTabOnBorder(

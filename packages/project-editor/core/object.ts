@@ -150,6 +150,18 @@ export type FlowPropertyType =
     | "template-literal"
     | "scpi-template-literal";
 
+export type LvglActionPropertyType =
+    | "boolean"
+    | "integer"
+    | "string"
+    | `enum:${string}`
+    | "screen"
+    | "widget"
+    | `widget:${string}`
+    | "group"
+    | "style"
+    | "image";
+
 export interface PropertyInfo {
     name: string;
     type: PropertyType;
@@ -171,6 +183,7 @@ export interface PropertyInfo {
         referencedObject: IEezObject
     ) => boolean;
     computed?: boolean;
+    computedIfNotLoadProject?: boolean;
     modifiable?: boolean;
     onSelect?: (
         object: IEezObject,
@@ -286,6 +299,8 @@ export interface PropertyInfo {
     ) => React.ReactNode[];
 
     colorEditorForLiteral?: boolean;
+
+    lvglActionPropertyType?: LvglActionPropertyType;
 }
 
 export type InheritedValue =
@@ -368,7 +383,13 @@ export interface ClassInfo {
     icon?: React.ReactNode;
     getIcon?: (object: IEezObject) => React.ReactNode;
 
-    componentHeaderColor?: string;
+    componentHeaderColor?:
+        | ((
+              object?: IEezObject,
+              componentClass?: IObjectClassInfo,
+              projectStore?: ProjectStore
+          ) => string)
+        | string;
     componentHeaderTextColor?: string;
 
     beforeLoadHook?: (

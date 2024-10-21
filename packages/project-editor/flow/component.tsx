@@ -1802,6 +1802,7 @@ export class Component extends EezObject {
             },
             {
                 name: "absolutePosition",
+                displayName: "Absolute pos.",
                 type: PropertyType.String,
                 propertyGridGroup: geometryGroup,
                 computed: true,
@@ -2553,15 +2554,17 @@ export class EventHandler extends EezObject {
         },
 
         deleteObjectRefHook: (eventHandler: EventHandler) => {
-            const widget = getAncestorOfType<Widget>(
-                eventHandler,
-                ProjectEditor.WidgetClass.classInfo
-            )!;
+            if (eventHandler.handlerType == "flow") {
+                const widget = getAncestorOfType<Widget>(
+                    eventHandler,
+                    ProjectEditor.WidgetClass.classInfo
+                )!;
 
-            ProjectEditor.getFlow(widget).deleteConnectionLinesFromOutput(
-                widget,
-                eventHandler.eventName
-            );
+                ProjectEditor.getFlow(widget).deleteConnectionLinesFromOutput(
+                    widget,
+                    eventHandler.eventName
+                );
+            }
         },
 
         defaultValue: {
@@ -3894,8 +3897,6 @@ export class Widget extends Component {
     ) {
         return 0;
     }
-
-    lvglPostCreate(runtime: LVGLPageRuntime) {}
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4004,8 +4005,14 @@ function renderActionComponent(
 
     let titleStyle: React.CSSProperties | undefined;
     if (classInfo.componentHeaderColor) {
+        let backgroundColor;
+        if (typeof classInfo.componentHeaderColor == "string") {
+            backgroundColor = classInfo.componentHeaderColor;
+        } else {
+            backgroundColor = classInfo.componentHeaderColor(actionNode);
+        }
         titleStyle = {
-            backgroundColor: classInfo.componentHeaderColor
+            backgroundColor
         };
     }
 
@@ -4059,6 +4066,14 @@ function renderActionComponent(
                     {executionStateInfo}
                     <span className="title-text">{getLabel(actionNode)}</span>
                 </div>
+                {actionNode instanceof
+                    ProjectEditor.CommentActionComponentClass &&
+                    actionNode.collapsed && (
+                        <Icon
+                            icon="material:arrow_drop_down"
+                            style={{ opacity: 0.5 }}
+                        />
+                    )}
                 {seqOutputIndex != -1 && (
                     <ComponentOutputSpan
                         componentOutput={actionNode.outputs[seqOutputIndex]}
@@ -4668,7 +4683,7 @@ function isActionComponent(component: Component) {
     return component instanceof ActionComponent;
 }
 
-function checkProperty(
+export function checkProperty(
     projectStore: ProjectStore,
     component: Component,
     messages: IMessage[],

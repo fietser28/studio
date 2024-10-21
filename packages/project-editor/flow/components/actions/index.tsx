@@ -21,7 +21,8 @@ import {
     getParent,
     MessageType,
     getId,
-    IMessage
+    IMessage,
+    IObjectClassInfo
 } from "project-editor/core/object";
 import {
     getAncestorOfType,
@@ -30,6 +31,7 @@ import {
     getListLabel,
     getProjectStore,
     Message,
+    ProjectStore,
     propertyNotFoundMessage,
     propertyNotSetMessage,
     Section
@@ -111,7 +113,8 @@ import {
     COMPONENT_TYPE_SORT_ARRAY_ACTION,
     COMPONENT_TYPE_TEST_AND_SET_ACTION,
     COMPONENT_TYPE_LABEL_IN_ACTION,
-    COMPONENT_TYPE_LABEL_OUT_ACTION
+    COMPONENT_TYPE_LABEL_OUT_ACTION,
+    COMPONENT_TYPE_SET_COLOR_THEME_ACTION
 } from "project-editor/flow/components/component-types";
 import { makeEndInstruction } from "project-editor/flow/expression/instructions";
 import { ProjectEditor } from "project-editor/project-editor-interface";
@@ -119,6 +122,7 @@ import {
     CLIPBOARD_WRITE_ICON,
     LANGUAGE_ICON,
     LOG_ICON,
+    PALETTE_ICON,
     PRINT_TO_PDF_ICON
 } from "project-editor/ui-components/icons";
 import { humanize } from "eez-studio-shared/string";
@@ -2076,15 +2080,12 @@ export class CallActionActionComponent extends ActionComponent {
         flowComponentId: COMPONENT_TYPE_CALL_ACTION_ACTION,
 
         properties: [
-            makeExpressionProperty(
-                {
-                    name: "action",
-                    type: PropertyType.ObjectReference,
-                    referencedObjectCollectionPath: "actions",
-                    propertyGridGroup: specificGroup
-                },
-                "string"
-            ),
+            {
+                name: "action",
+                type: PropertyType.ObjectReference,
+                referencedObjectCollectionPath: "actions",
+                propertyGridGroup: specificGroup
+            },
             userPropertyValuesProperty
         ],
         getAdditionalFlowProperties:
@@ -2109,7 +2110,28 @@ export class CallActionActionComponent extends ActionComponent {
                 <path d="M17 4a12.25 12.25 0 0 1 0 16"></path>
             </svg>
         ),
-        componentHeaderColor: "#C7E9C0",
+        componentHeaderColor: (
+            object?: CallActionActionComponent,
+            componentClass?: IObjectClassInfo,
+            projectStore?: ProjectStore
+        ) => {
+            let actionName;
+            if (object) {
+                actionName = object.action;
+                projectStore = ProjectEditor.getProjectStore(object);
+            } else if (componentClass) {
+                actionName = componentClass.props?.action;
+            }
+
+            if (projectStore && actionName) {
+                const action = findAction(projectStore.project, actionName);
+                if (action && action.implementationType == "native") {
+                    return "#9CBA93";
+                }
+            }
+
+            return "#C7E9C0";
+        },
         open: (object: CallActionActionComponent) => {
             object.open();
         },
@@ -2262,7 +2284,11 @@ export class CallActionActionComponent extends ActionComponent {
                     <pre key={userProperty.name}>
                         <>
                             {userProperty.displayName || userProperty.name}
-                            <LeftArrow />
+                            {userProperty.assignable ? (
+                                <RightArrow />
+                            ) : (
+                                <LeftArrow />
+                            )}
                             {this.userPropertyValues.values[userProperty.id] ||
                                 ""}
                         </>
@@ -3759,6 +3785,61 @@ export class AnimateActionComponent extends ActionComponent {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+export class SetColorThemeActionComponent extends ActionComponent {
+    static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
+        flowComponentId: COMPONENT_TYPE_SET_COLOR_THEME_ACTION,
+        componentPaletteGroupName: "GUI",
+        properties: [
+            makeExpressionProperty(
+                {
+                    name: "theme",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup
+                },
+                "any"
+            )
+        ],
+        icon: PALETTE_ICON,
+        componentHeaderColor: "#DEB887"
+    });
+
+    theme: string;
+
+    override makeEditable() {
+        super.makeEditable();
+
+        makeObservable(this, {
+            theme: observable
+        });
+    }
+
+    getInputs() {
+        return [
+            {
+                name: "@seqin",
+                type: "any" as ValueType,
+                isSequenceInput: true,
+                isOptionalInput: true
+            },
+            ...super.getInputs()
+        ];
+    }
+
+    getOutputs() {
+        return [
+            {
+                name: "@seqout",
+                type: "null" as ValueType,
+                isSequenceOutput: true,
+                isOptionalOutput: true
+            },
+            ...super.getOutputs()
+        ];
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 export class ClipboardWriteActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         componentPaletteGroupName: "GUI",
@@ -4031,7 +4112,7 @@ export class CommentActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         flowComponentId: COMPONENT_TYPE_COMMENT_ACTION,
 
-        label: () => "",
+        label: (object: CommentActionComponent) => object.description,
 
         properties: [
             {
@@ -4039,14 +4120,29 @@ export class CommentActionComponent extends ActionComponent {
                 type: PropertyType.String,
                 hideInPropertyGrid: true,
                 hideInDocumentation: "all"
+            },
+            {
+                name: "collapsed",
+                type: PropertyType.Boolean,
+                hideInPropertyGrid: true,
+                hideInDocumentation: "none"
+            },
+            {
+                name: "expandedWidth",
+                type: PropertyType.Number,
+                hideInPropertyGrid: true,
+                hideInDocumentation: "none"
             }
         ],
         beforeLoadHook: (
             object: CommentActionComponent,
             jsObject: Partial<CommentActionComponent>
         ) => {
-            if (jsObject.description) {
-                delete jsObject.description;
+            if (jsObject.collapsed == undefined) {
+                jsObject.collapsed = false;
+            }
+            if (jsObject.expandedWidth == undefined) {
+                jsObject.expandedWidth = jsObject.width;
             }
         },
         icon: (
@@ -4063,37 +4159,59 @@ export class CommentActionComponent extends ActionComponent {
             left: 0,
             top: 0,
             width: 435,
-            height: 134
+            height: 134,
+            collapsed: false
+        },
+        open: (object: CommentActionComponent) => {
+            const collapsed = !object.collapsed;
+
+            if (collapsed) {
+                ProjectEditor.getProjectStore(object).updateObject(object, {
+                    collapsed: !object.collapsed,
+                    expandedWidth: object.width
+                });
+            } else {
+                ProjectEditor.getProjectStore(object).updateObject(object, {
+                    collapsed: !object.collapsed,
+                    width: object.expandedWidth
+                });
+            }
         }
     });
 
     text: string;
+    collapsed: boolean;
+    expandedWidth: number;
 
     override makeEditable() {
         super.makeEditable();
 
         makeObservable(this, {
-            text: observable
+            text: observable,
+            collapsed: observable,
+            expandedWidth: observable
         });
     }
 
     get autoSize(): AutoSize {
-        return "height";
+        return this.collapsed ? "both" : "height";
     }
 
     getResizeHandlers(): IResizeHandler[] | undefined | false {
-        return [
-            {
-                x: 0,
-                y: 50,
-                type: "w-resize"
-            },
-            {
-                x: 100,
-                y: 50,
-                type: "e-resize"
-            }
-        ];
+        return this.collapsed
+            ? []
+            : [
+                  {
+                      x: 0,
+                      y: 50,
+                      type: "w-resize"
+                  },
+                  {
+                      x: 100,
+                      y: 50,
+                      type: "e-resize"
+                  }
+              ];
     }
 
     getClassName(flowContext: IFlowContext) {
@@ -4105,17 +4223,19 @@ export class CommentActionComponent extends ActionComponent {
 
     getBody(flowContext: IFlowContext): React.ReactNode {
         return (
-            <TrixEditor
-                component={this}
-                flowContext={flowContext}
-                value={this.text}
-                setValue={action((value: string) => {
-                    const projectStore = getProjectStore(this);
-                    projectStore.updateObject(this, {
-                        text: value
-                    });
-                })}
-            ></TrixEditor>
+            !this.collapsed && (
+                <TrixEditor
+                    component={this}
+                    flowContext={flowContext}
+                    value={this.text}
+                    setValue={action((value: string) => {
+                        const projectStore = getProjectStore(this);
+                        projectStore.updateObject(this, {
+                            text: value
+                        });
+                    })}
+                ></TrixEditor>
+            )
         );
     }
 }
@@ -4368,8 +4488,15 @@ export class LabelOutActionComponent extends ActionComponent {
 
         let titleStyle: React.CSSProperties | undefined;
         if (classInfo.componentHeaderColor) {
+            let backgroundColor;
+            if (typeof classInfo.componentHeaderColor == "string") {
+                backgroundColor = classInfo.componentHeaderColor;
+            } else {
+                backgroundColor = classInfo.componentHeaderColor(this);
+            }
+
             titleStyle = {
-                backgroundColor: classInfo.componentHeaderColor
+                backgroundColor
             };
         }
 
@@ -4506,8 +4633,15 @@ export class LabelInActionComponent extends ActionComponent {
 
         let titleStyle: React.CSSProperties | undefined;
         if (classInfo.componentHeaderColor) {
+            let backgroundColor;
+            if (typeof classInfo.componentHeaderColor == "string") {
+                backgroundColor = classInfo.componentHeaderColor;
+            } else {
+                backgroundColor = classInfo.componentHeaderColor(this);
+            }
+
             titleStyle = {
-                backgroundColor: classInfo.componentHeaderColor
+                backgroundColor
             };
         }
 
@@ -4715,6 +4849,9 @@ registerClass(
 registerClass("OverrideStyleActionComponent", OverrideStyleActionComponent);
 
 registerClass("AnimateActionComponent", AnimateActionComponent);
+
+registerClass("SetColorThemeActionComponent", SetColorThemeActionComponent);
+
 registerClass("ClipboardWriteActionComponent", ClipboardWriteActionComponent);
 
 registerClass("ErrorActionComponent", ErrorActionComponent);

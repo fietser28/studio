@@ -739,9 +739,11 @@ void doUpdateTasks() {
             const char *cur_val = lv_dropdown_get_options(updateTask.obj);
             if (strcmp(new_val, cur_val) != 0) lv_dropdown_set_options(updateTask.obj, new_val);
         } else if (updateTask.updateTaskType == UPDATE_TASK_TYPE_DROPDOWN_SELECTED) {
-            uint16_t new_val = (uint16_t)evalIntegerProperty(updateTask.flow_state, updateTask.component_index, updateTask.property_index, "Failed to evaluate Selected in Dropdown widget");
-            uint16_t cur_val = lv_dropdown_get_selected(updateTask.obj);
-            if (new_val != cur_val) lv_dropdown_set_selected(updateTask.obj, new_val);
+            if (!(lv_obj_get_state(updateTask.obj) & LV_STATE_EDITED)) {
+                uint16_t new_val = (uint16_t)evalIntegerProperty(updateTask.flow_state, updateTask.component_index, updateTask.property_index, "Failed to evaluate Selected in Dropdown widget");
+                uint16_t cur_val = lv_dropdown_get_selected(updateTask.obj);
+                if (new_val != cur_val) lv_dropdown_set_selected(updateTask.obj, new_val);
+            }
         } else if (updateTask.updateTaskType == UPDATE_TASK_TYPE_ROLLER_OPTIONS) {
             const char *new_val = evalStringArrayPropertyAndJoin(updateTask.flow_state, updateTask.component_index, updateTask.property_index, "Failed to evaluate Selected in Dropdown widget", "\n");
             const char *cur_val = lv_roller_get_options(updateTask.obj);
@@ -749,9 +751,11 @@ void doUpdateTasks() {
                 lv_roller_set_options(updateTask.obj, new_val, (lv_roller_mode_t)updateTask.param);
             }
         } else if (updateTask.updateTaskType == UPDATE_TASK_TYPE_ROLLER_SELECTED) {
-            uint16_t new_val = (uint16_t)evalIntegerProperty(updateTask.flow_state, updateTask.component_index, updateTask.property_index, "Failed to evaluate Selected in Roller widget");
-            uint16_t cur_val = lv_roller_get_selected(updateTask.obj);
-            if (new_val != cur_val) lv_roller_set_selected(updateTask.obj, new_val, LV_ANIM_OFF);
+            if (!(lv_obj_get_state(updateTask.obj) & LV_STATE_EDITED)) {
+                uint16_t new_val = (uint16_t)evalIntegerProperty(updateTask.flow_state, updateTask.component_index, updateTask.property_index, "Failed to evaluate Selected in Roller widget");
+                uint16_t cur_val = lv_roller_get_selected(updateTask.obj);
+                if (new_val != cur_val) lv_roller_set_selected(updateTask.obj, new_val, LV_ANIM_OFF);
+            }
         } else if (updateTask.updateTaskType == UPDATE_TASK_TYPE_SLIDER_VALUE) {
             int32_t new_val = evalIntegerProperty(updateTask.flow_state, updateTask.component_index, updateTask.property_index, "Failed to evaluate Value in Slider widget");
             int32_t cur_val = lv_slider_get_value(updateTask.obj);
@@ -1043,7 +1047,7 @@ EM_PORT_API(lv_group_t *) lvglCreateGroup() {
 }
 
 EM_PORT_API(void) lvglAddScreenLoadedEventHandler(lv_obj_t *screenObj) {
-     lv_obj_add_event_cb(screenObj, screen_loaded_event_callback, LV_EVENT_SCREEN_LOADED, 0);
+     lv_obj_add_event_cb(screenObj, screen_loaded_event_callback, LV_EVENT_SCREEN_LOAD_START, 0);
 }
 
 EM_PORT_API(void) lvglGroupAddObject(lv_obj_t *screenObj, lv_group_t *groupObj, lv_obj_t *obj) {
@@ -1082,6 +1086,30 @@ static lv_group_t *getLvglGroupFromIndex(int32_t index) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static int32_t getLvglScreenByName(const char *name) {
+    return (int32_t)EM_ASM_INT({
+        return getLvglScreenByName($0, UTF8ToString($1));
+    }, eez::flow::g_wasmModuleId, name);
+}
+
+static int32_t getLvglObjectByName(const char *name) {
+    return (int32_t)EM_ASM_INT({
+        return getLvglObjectByName($0, UTF8ToString($1));
+    }, eez::flow::g_wasmModuleId, name);
+}
+
+static int32_t getLvglGroupByName(const char *name) {
+    return (int32_t)EM_ASM_INT({
+        return getLvglGroupByName($0, UTF8ToString($1));
+    }, eez::flow::g_wasmModuleId, name);
+}
+
+static int32_t getLvglStyleByName(const char *name) {
+    return (int32_t)EM_ASM_INT({
+        return getLvglStyleByName($0, UTF8ToString($1));
+    }, eez::flow::g_wasmModuleId, name);
+}
+
 static const void *getLvglImageByName(const char *name) {
     return (const void *)EM_ASM_INT({
         return getLvglImageByName($0, UTF8ToString($1));
@@ -1100,6 +1128,14 @@ static void lvglObjRemoveStyle(lv_obj_t *obj, int32_t styleIndex) {
     return EM_ASM({
         lvglObjRemoveStyle($0, $1, $2);
     }, eez::flow::g_wasmModuleId, obj, styleIndex);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+static void lvglSetColorTheme(const char *themeName) {
+    return EM_ASM({
+        lvglSetColorTheme($0, UTF8ToString($1));
+    }, eez::flow::g_wasmModuleId, themeName);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1125,10 +1161,15 @@ extern "C" void flowInit(uint32_t wasmModuleId, uint32_t debuggerMessageSubscipt
     eez::flow::replacePageHook = replacePageHook;
     eez::flow::stopScriptHook = stopScript;
     eez::flow::getLvglObjectFromIndexHook = getLvglObjectFromIndex;
+    eez::flow::getLvglScreenByNameHook = getLvglScreenByName;
+    eez::flow::getLvglObjectByNameHook = getLvglObjectByName;
+    eez::flow::getLvglGroupByNameHook = getLvglGroupByName;
+    eez::flow::getLvglStyleByNameHook = getLvglStyleByName;
     eez::flow::getLvglImageByNameHook = getLvglImageByName;
     eez::flow::lvglObjAddStyleHook = lvglObjAddStyle;
     eez::flow::lvglObjRemoveStyleHook = lvglObjRemoveStyle;
     eez::flow::getLvglGroupFromIndexHook = getLvglGroupFromIndex;
+    eez::flow::lvglSetColorThemeHook = lvglSetColorTheme;
 
     eez::flow::setDebuggerMessageSubsciptionFilter(debuggerMessageSubsciptionFilter);
     eez::flow::onDebuggerClientConnected();

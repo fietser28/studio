@@ -248,10 +248,6 @@ export class LVGLUserWidgetWidget extends LVGLWidget {
         });
     }
 
-    override getIsAccessibleFromSourceCode() {
-        return true;
-    }
-
     get userWidgetPage(): Page | undefined {
         if (!this.userWidgetPageName) {
             return undefined;
@@ -456,29 +452,31 @@ export class LVGLUserWidgetWidget extends LVGLWidget {
 
         const savedUserWidgetContext = runtime.lvglCreateContext;
 
-        if (runtime.wasm.assetsMap) {
+        if (runtime.wasm.assetsMap?.flows.length > 0) {
             const flow =
                 runtime.wasm.assetsMap.flows[savedUserWidgetContext.pageIndex];
-            const componentPath = getObjectPathAsString(this);
-            const componentIndex = flow.componentIndexes[componentPath];
+            if (flow) {
+                const componentPath = getObjectPathAsString(this);
+                const componentIndex = flow.componentIndexes[componentPath];
 
-            runtime.lvglCreateContext = {
-                widgetIndex:
-                    savedUserWidgetContext.widgetIndex + widgetIndex + 1,
-                pageIndex:
-                    runtime.wasm.assetsMap.flowIndexes[
-                        getObjectPathAsString(this.userWidgetPage!)
-                    ],
-                flowState: savedUserWidgetContext.flowState
-                    ? runtime.wasm._lvglGetFlowState(
-                          savedUserWidgetContext.flowState,
-                          componentIndex
-                      )
-                    : 0
-            };
+                runtime.lvglCreateContext = {
+                    pageIndex:
+                        runtime.wasm.assetsMap.flowIndexes[
+                            getObjectPathAsString(this.userWidgetPage!)
+                        ],
+                    flowState: savedUserWidgetContext.flowState
+                        ? runtime.wasm._lvglGetFlowState(
+                              savedUserWidgetContext.flowState,
+                              componentIndex
+                          )
+                        : 0
+                };
+            }
         }
 
         const rect = this.getLvglCreateRect();
+
+        runtime.beginUserWidget(this);
 
         const obj = userWidgetPageCopy.lvglCreate(runtime, parentObj, {
             widgetIndex,
@@ -487,6 +485,8 @@ export class LVGLUserWidgetWidget extends LVGLWidget {
             width: rect.width,
             height: rect.height
         });
+
+        runtime.endUserWidget();
 
         runtime.lvglCreateContext = savedUserWidgetContext;
 
@@ -613,9 +613,9 @@ export class LVGLUserWidgetWidget extends LVGLWidget {
 
             // widgetStartIndex
             const widgetStartIndex =
-                ProjectEditor.getProjectStore(
-                    this
-                ).lvglIdentifiers.getIdentifier(this).index + 1;
+                assets.lvglBuild.getWidgetObjectIndex(this) + 1;
+
+            console.log(this.identifier, widgetStartIndex);
             dataBuffer.writeInt32(widgetStartIndex);
         } else {
             // flowIndex

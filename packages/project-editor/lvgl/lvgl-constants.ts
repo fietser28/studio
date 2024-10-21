@@ -315,6 +315,8 @@ export const LVGL_FLAG_CODES_90 = {
     OVERFLOW_VISIBLE: 1 << 20 // Do not clip the children's content to the parent's boundary*/
 };
 
+export const LV_OBJ_FLAG_ENUM_NAME = "LV_OBJ_FLAG";
+
 ////////////////////////////////////////////////////////////////////////////////
 
 export const LVGL_REACTIVE_FLAGS: (keyof typeof LVGL_FLAG_CODES)[] = [
@@ -345,6 +347,8 @@ export const LVGL_STYLE_STATES = [
     "FOCUS_KEY",
     "SCROLLED"
 ];
+
+export const LV_STATE_ENUM_NAME = "LV_STATE";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -665,3 +669,23 @@ export const LV_IMAGE_ALIGN = {
     STRETCH: 11,
     TILE: 12
 };
+
+////////////////////////////////////////////////////////////////////////////////
+
+export const LV_SCR_LOAD_ANIM_NONE = 0;
+export const LV_SCR_LOAD_ANIM_OVER_LEFT = 1;
+export const LV_SCR_LOAD_ANIM_OVER_RIGHT = 2;
+export const LV_SCR_LOAD_ANIM_OVER_TOP = 3;
+export const LV_SCR_LOAD_ANIM_OVER_BOTTOM = 4;
+export const LV_SCR_LOAD_ANIM_MOVE_LEFT = 5;
+export const LV_SCR_LOAD_ANIM_MOVE_RIGHT = 6;
+export const LV_SCR_LOAD_ANIM_MOVE_TOP = 7;
+export const LV_SCR_LOAD_ANIM_MOVE_BOTTOM = 8;
+export const LV_SCR_LOAD_ANIM_FADE_IN = 9;
+export const LV_SCR_LOAD_ANIM_FADE_OUT = 10;
+export const LV_SCR_LOAD_ANIM_OUT_LEFT = 11;
+export const LV_SCR_LOAD_ANIM_OUT_RIGHT = 12;
+export const LV_SCR_LOAD_ANIM_OUT_TOP = 13;
+export const LV_SCR_LOAD_ANIM_OUT_BOTTOM = 14;
+
+export const LV_SCR_LOAD_ANIM_ENUM_NAME = "LV_SCR_LOAD_ANIM";

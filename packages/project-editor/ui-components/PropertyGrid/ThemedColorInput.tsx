@@ -3,7 +3,7 @@ import ReactDOM from "react-dom";
 import { observer } from "mobx-react";
 import { SketchPicker } from "react-color";
 
-import { isDark, isValid } from "eez-studio-shared/color";
+import { isDark, isLight, isValid } from "eez-studio-shared/color";
 
 import { getProperty } from "project-editor/core/object";
 import { getEezStudioDataFromDragEvent } from "project-editor/store";
@@ -48,9 +48,17 @@ export const ThemedColorInput = observer(
         onDrop = (event: React.DragEvent) => {
             event.stopPropagation();
             event.preventDefault();
+
+            if (this.props.onClick) {
+                this.props.onClick(event as any);
+            }
+
             var data = getEezStudioDataFromDragEvent(this.context, event);
             if (data && data.objectClassName === "Color" && data.object) {
-                this.props.onChange(getProperty(data.object, "name"));
+                let value = getProperty(data.object, "name");
+                setTimeout(() => {
+                    this.props.onChange(value);
+                });
             }
         };
 
@@ -161,7 +169,7 @@ export const ThemedColorInput = observer(
                     ? settingsController.isDarkTheme
                         ? "black"
                         : "white"
-                    : getThemedColor(this.context, value);
+                    : getThemedColor(this.context, value).colorValue;
 
             if (!isValid(color)) {
                 color = settingsController.isDarkTheme ? "black" : "white";
@@ -197,7 +205,11 @@ export const ThemedColorInput = observer(
                         ref={this.props.inputRef}
                         className="form-control"
                         style={{
-                            color: isDark(tinycolor(color).toHexString())
+                            color: settingsController.isDarkTheme
+                                ? isLight(tinycolor(color).toHexString())
+                                    ? "#000"
+                                    : undefined
+                                : isDark(tinycolor(color).toHexString())
                                 ? "#fff"
                                 : undefined,
                             backgroundColor: tinycolor(color).toHexString()

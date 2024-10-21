@@ -60,13 +60,47 @@
     }
 }
 
-.EezStudio_ProjectEditorMainContentWrapper {
+.EezStudio_ProjectEditor_MainContentWrapper {
     flex-grow: 1;
     display: flex;
     flex-direction: column;
 
-    > .EezStudio_ToolbarNav {
+    > .EezStudio_ProjectEditor_ToolbarNav {
+        padding: 3px;
+        background-color: @panelHeaderColor;
+        border-bottom: 1px solid @borderColor;
         min-height: 45px;
+
+        .btn {
+            padding: 0.25rem 0.75rem;
+        }
+
+        .btn-group:not(:last-child) {
+            margin-right: 20px;
+        }
+
+        select {
+            height: 36px;
+        }
+
+        .EezStudio_ProjectEditor_ToolbarNav_EditorButtons {
+            @media (min-width: 1600px) {
+                width: 0;
+            }
+            justify-content: flex-start;
+            display: flex;
+        }
+
+        .EezStudio_ProjectEditor_ToolbarNav_RunEditSwitchControls {
+            display: flex;
+        }
+
+        .EezStudio_ProjectEditor_ToolbarNav_FlowRuntimeControls {
+            @media (min-width: 1600px) {
+                width: 0;
+            }
+            justify-content: "flex-end";
+        }
     }
 }
 
@@ -520,10 +554,8 @@
     border-radius: 4px;
     overflow: hidden;
 
-    div:nth-child(1) {
-        .EezStudio_SearchInput {
-            border-bottom: 1px solid @borderColor;
-        }
+    .EezStudio_SearchInput_Container {
+        border-bottom: 1px solid @borderColor;
     }
 
     div:nth-child(2) {
@@ -1127,6 +1159,8 @@
 
             width: var(--size);
             height: calc(var(--size) * 2);
+
+            min-height: 10px;
         }
 
         [data-connection-input-id] {
@@ -1175,6 +1209,7 @@
 
         .title-enclosure {
             overflow: hidden;
+            min-width: 0px;
 
             svg {
                 fill-opacity: 30%;
@@ -1222,10 +1257,9 @@
             trix-toolbar {
                 visibility: hidden;
                 position: absolute;
-                top: -55px;
+                top: -53px;
                 left: 0px;
-                background-color: @panelHeaderColor;
-                border: 1px solid @borderColor;
+                background-color: @trixToolbarColor;
                 padding-top: 3px;
             }
         }
@@ -1238,7 +1272,7 @@
         padding: 5px;
         border-radius: 4px;
         box-shadow: @componentShadow;
-        width: 100%;
+        min-width: 100%;
     }
 
     &.EezStudio_FlowEditorCanvasContainer {
@@ -3594,6 +3628,115 @@
                     }
                 }
             }
+        }
+    }
+}
+
+.EezStudio_ProjectEditor_GroupCheckboxes {
+    display: flex;
+    flex-wrap: wrap;
+    /*
+    margin: 5px 0;
+    */
+    padding: 5px;
+    /*
+    border: 1px solid @borderColor;
+    border-radius: 4px;
+    */
+
+    > .form-check {
+        margin-right: 10px;
+        min-width: 120px;
+    }
+
+    &.EezStudio_ProjectEditor_GroupCheckboxes_States {
+        > .form-check {
+            min-width: 120px;
+        }
+    }
+}
+
+.EezStudio_NewLVGLActionDialog {
+    .EezStudio_SearchInput_Container {
+        border: 1px solid @borderColor;
+        border-bottom: none;
+    }
+    .EezStudio_ListContainer {
+        min-height: 50px;
+        max-height: 480px;
+
+        .EezStudio_List {
+            padding: 5px;
+
+            > div.EezStudio_Selected {
+                background-color: @selectionBackgroundColor;
+                color: @selectionColor;
+            }
+        }
+    }
+}
+
+.EezStudio_PageZoomButton {
+    padding: 1px 4px;
+    width: 72px;
+
+    background-color: @selectionBackgroundColor;
+    &:hover {
+        background-color: @actionHoverColor;
+    }
+}
+
+.EezStudio_PageZoomButton_DropdownContent {
+    font-size: 0.8rem;
+
+    padding: 0;
+    margin: 0;
+
+    border-radius: 4px;
+    overflow: hidden;
+
+    ul {
+        margin: 0;
+        padding: 5px;
+
+        .EezStudio_PageZoomButton_DropdownContent_ZoomInput {
+            margin: 4px;
+        }
+
+        li {
+            list-style: none;
+
+            cursor: pointer;
+
+            &:hover {
+                color: @selectionColor;
+                background-color: @selectionBackgroundColor;
+            }
+
+            &.EezStudio_PageZoomButton_DropdownContent_MenuItem {
+                margin: 2px 0;
+                padding: 2px 0 2px 24px;
+            }
+
+            &.EezStudio_PageZoomButton_DropdownContent_Checkmark {
+                margin: 2px 0px;
+                padding: 2px;
+            }
+        }
+    }
+}
+
+.EezStudio_LVGLBuildImageInfoDialog {
+    .modal-body {
+        font-size: 120%;
+
+        li {
+            margin-bottom: 20px;
+        }
+
+        pre {
+            margin: 5px 0;
+            user-select: text !important;
         }
     }
 }

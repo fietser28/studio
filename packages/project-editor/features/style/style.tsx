@@ -1071,7 +1071,8 @@ export class Style extends EezObject {
 
             cssDeclarations: computed,
             cssPreview: computed,
-            classNames: computed
+            classNames: computed,
+            dynamicCSS: observable
         });
     }
 
@@ -1205,7 +1206,10 @@ export class Style extends EezObject {
             function checkColor(propertyName: string) {
                 const color = (style as any)[propertyName];
                 if (color) {
-                    const colorValue = getThemedColor(projectStore, color);
+                    const colorValue = getThemedColor(
+                        projectStore,
+                        color
+                    ).colorValue;
                     if (!isValid(colorValue)) {
                         messages.push(
                             new Message(
@@ -1925,17 +1929,20 @@ export class Style extends EezObject {
                     ["font-style", this.fontStyle],
                     [
                         "color",
-                        this.color && getThemedColor(projectStore, this.color)
+                        this.color &&
+                            getThemedColor(projectStore, this.color).colorValue
                     ],
                     [
                         "background-color",
                         this.backgroundColor &&
                             getThemedColor(projectStore, this.backgroundColor)
+                                .colorValue
                     ],
                     [
                         "border-color",
                         this.borderColor &&
                             getThemedColor(projectStore, this.borderColor)
+                                .colorValue
                     ],
                     ["border-style", this.borderStyle],
                     ["box-shadow", this.boxShadow]
@@ -1948,6 +1955,7 @@ export class Style extends EezObject {
                         "color",
                         this.activeColor &&
                             getThemedColor(projectStore, this.activeColor)
+                                .colorValue
                     ],
                     [
                         "background-color",
@@ -1955,7 +1963,7 @@ export class Style extends EezObject {
                             getThemedColor(
                                 projectStore,
                                 this.activeBackgroundColor
-                            )
+                            ).colorValue
                     ]
                 ]
             },
@@ -1966,6 +1974,7 @@ export class Style extends EezObject {
                         "color",
                         this.focusColor &&
                             getThemedColor(projectStore, this.focusColor)
+                                .colorValue
                     ],
                     [
                         "background-color",
@@ -1973,7 +1982,7 @@ export class Style extends EezObject {
                             getThemedColor(
                                 projectStore,
                                 this.focusBackgroundColor
-                            )
+                            ).colorValue
                     ]
                 ]
             }
@@ -2323,7 +2332,10 @@ function getInheritedValue(
                     propertyName === "focusBackgroundColor" ||
                     propertyName === "borderColor")
             ) {
-                value = getThemedColor(getProjectStore(styleObject), value);
+                value = getThemedColor(
+                    getProjectStore(styleObject),
+                    value
+                ).colorValue;
             }
 
             return {

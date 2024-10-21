@@ -128,7 +128,7 @@ EM_PORT_API(lv_obj_t *) lvglCreateUserWidget(lv_obj_t *parentObj, int32_t index,
     return obj;
 }
 
-EM_PORT_API(lv_obj_t *) lvglCreateImage(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h, const void *img_src, lv_coord_t pivotX, lv_coord_t pivotY, uint16_t zoom, int16_t angle, int inner_align) {
+EM_PORT_API(lv_obj_t *) lvglCreateImage(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h, const void *img_src, bool setPivot, lv_coord_t pivotX, lv_coord_t pivotY, uint16_t zoom, int16_t angle, int inner_align) {
     lv_obj_t *obj = lv_img_create(parentObj);
     lv_obj_set_pos(obj, x, y);
     lv_obj_set_size(obj, w, h);
@@ -138,7 +138,9 @@ EM_PORT_API(lv_obj_t *) lvglCreateImage(lv_obj_t *parentObj, int32_t index, lv_c
         lv_image_set_inner_align(obj, (lv_image_align_t)inner_align);
 #endif
     }
-    lv_img_set_pivot(obj, pivotX, pivotY);
+    if (setPivot) {
+        lv_img_set_pivot(obj, pivotX, pivotY);
+    }
     lv_img_set_zoom(obj, zoom);
     lv_img_set_angle(obj, angle);
     lv_obj_update_layout(obj);
@@ -146,9 +148,11 @@ EM_PORT_API(lv_obj_t *) lvglCreateImage(lv_obj_t *parentObj, int32_t index, lv_c
     return obj;
 }
 
-EM_PORT_API(void) lvglSetImageSrc(lv_obj_t *obj, const void *img_src, lv_coord_t pivotX, lv_coord_t pivotY, uint16_t zoom, int16_t angle, int inner_align) {
+EM_PORT_API(void) lvglSetImageSrc(lv_obj_t *obj, const void *img_src, bool setPivot, lv_coord_t pivotX, lv_coord_t pivotY, uint16_t zoom, int16_t angle, int inner_align) {
     lv_img_set_src(obj, img_src);
-    lv_img_set_pivot(obj, pivotX, pivotY);
+    if (setPivot) {
+        lv_img_set_pivot(obj, pivotX, pivotY);
+    }
     lv_img_set_zoom(obj, zoom);
     lv_img_set_angle(obj, angle);
     lv_obj_update_layout(obj);
@@ -466,6 +470,10 @@ EM_PORT_API(lv_obj_t *) lvglCreateLed(lv_obj_t *parentObj, int32_t index, lv_coo
     lv_obj_update_layout(obj);
     setObjectIndex(obj, index);
     return obj;
+}
+
+EM_PORT_API(void) lvglLedSetColor(lv_obj_t *obj, uint32_t color) {
+    lv_led_set_color(obj, lv_color_hex(color));
 }
 
 EM_PORT_API(void) lvglUpdateLedColor(lv_obj_t *obj, void *flow_state, unsigned component_index, unsigned property_index) {
@@ -1025,6 +1033,54 @@ EM_PORT_API(void) lvglUpdateMeterIndicatorEndValue(lv_obj_t *obj, lv_meter_indic
     addUpdateTask(UPDATE_TASK_TYPE_METER_INDICATOR_END_VALUE, obj, flow_state, component_index, property_index, indicator, 0);
 }
 
+EM_PORT_API(void) lvglMeterIndicatorNeedleLineSetColor(lv_obj_t *obj, lv_meter_indicator_t *indicator, uint32_t color) {
+#if LVGL_VERSION_MAJOR >= 9
+#else
+    indicator->type_data.needle_line.color = lv_color_hex(color);
+    lv_obj_invalidate(obj);
+#endif
+}
+
+EM_PORT_API(void) lvglMeterIndicatorScaleLinesSetColorStart(lv_obj_t *obj, lv_meter_indicator_t *indicator, uint32_t color) {
+#if LVGL_VERSION_MAJOR >= 9
+#else
+    indicator->type_data.scale_lines.color_start = lv_color_hex(color);
+    lv_obj_invalidate(obj);
+#endif
+}
+
+EM_PORT_API(void) lvglMeterIndicatorScaleLinesSetColorEnd(lv_obj_t *obj, lv_meter_indicator_t *indicator, uint32_t color) {
+#if LVGL_VERSION_MAJOR >= 9
+#else
+    indicator->type_data.scale_lines.color_end = lv_color_hex(color);
+    lv_obj_invalidate(obj);
+#endif
+}
+
+EM_PORT_API(void) lvglMeterIndicatorArcSetColor(lv_obj_t *obj, lv_meter_indicator_t *indicator, uint32_t color) {
+#if LVGL_VERSION_MAJOR >= 9
+#else
+    indicator->type_data.arc.color = lv_color_hex(color);
+    lv_obj_invalidate(obj);
+#endif
+}
+
+EM_PORT_API(void) lvglMeterScaleSetMinorTickColor(lv_obj_t *obj, lv_meter_scale_t *scale, uint32_t color) {
+#if LVGL_VERSION_MAJOR >= 9
+#else
+    scale->tick_color = lv_color_hex(color);
+    lv_obj_invalidate(obj);
+#endif
+}
+
+EM_PORT_API(void) lvglMeterScaleSetMajorTickColor(lv_obj_t *obj, lv_meter_scale_t *scale, uint32_t color) {
+#if LVGL_VERSION_MAJOR >= 9
+#else
+    scale->tick_major_color = lv_color_hex(color);
+    lv_obj_invalidate(obj);
+#endif
+}
+
 EM_PORT_API(void) lvglUpdateDropdownOptions(lv_obj_t *obj, void *flow_state, unsigned component_index, unsigned property_index) {
     addUpdateTask(UPDATE_TASK_TYPE_DROPDOWN_OPTIONS, obj, flow_state, component_index, property_index, 0, 0);
 }
@@ -1211,6 +1267,10 @@ EM_PORT_API(lv_coord_t) lvglGetScrollX(lv_obj_t *obj) {
 
 EM_PORT_API(lv_coord_t) lvglGetScrollY(lv_obj_t *obj) {
     return lv_obj_get_scroll_y(obj);
+}
+
+EM_PORT_API(void) lvglObjInvalidate(lv_obj_t *obj) {
+    return lv_obj_invalidate(obj);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

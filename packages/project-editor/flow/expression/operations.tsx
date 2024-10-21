@@ -528,6 +528,24 @@ export const builtInFunctions: {
             return "string";
         }
     },
+    "Flow.themes": {
+        operationIndex: 89,
+        arity: 0,
+        args: [],
+        eval: (
+            expressionContext: IExpressionContext | undefined,
+            ...args: any[]
+        ) => {
+            const themes = expressionContext?.projectStore.project.themes;
+            if (themes) {
+                return themes.map(theme => theme.name);
+            }
+            return [];
+        },
+        getValueType: (...args: ValueType[]) => {
+            return "array:string";
+        }
+    },
     "Flow.parseInteger": {
         operationIndex: 31,
         arity: 1,
@@ -599,7 +617,8 @@ export const builtInFunctions: {
                 : undefined,
         getValueType: (...args: ValueType[]) => {
             return "blob";
-        }
+        },
+        enabled: projectStore => !projectStore.projectTypeTraits.isLVGL
     },
 
     "Flow.getBitmapAsDataURL": {

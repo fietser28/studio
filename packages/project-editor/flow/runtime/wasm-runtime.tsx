@@ -135,8 +135,11 @@ export class WasmRuntime extends RemoteRuntime {
         y: number;
         pressed: number;
     }[] = [];
+
+    wheelUpdated = false;
     wheelDeltaY = 0;
-    wheelClicked = 0;
+    wheelPressed = 0;
+
     keysPressed: number[] = [];
     screen: any;
     lastScreen: any;
@@ -148,6 +151,8 @@ export class WasmRuntime extends RemoteRuntime {
 
     lgvlPageRuntime: LVGLPageViewerRuntime | undefined;
 
+    selectedDashboardTheme: string | undefined;
+
     onInitialized: (() => void) | undefined;
 
     ////////////////////////////////////////////////////////////////////////////////
@@ -158,7 +163,8 @@ export class WasmRuntime extends RemoteRuntime {
         makeObservable(this, {
             worker: observable.shallow,
             displayWidth: observable,
-            displayHeight: observable
+            displayHeight: observable,
+            selectedDashboardTheme: observable
         });
     }
 
@@ -377,6 +383,26 @@ export class WasmRuntime extends RemoteRuntime {
                 return bitmap.imageSrc;
             }
             return null;
+        } else if (workerToRenderMessage.setDashboardColorTheme) {
+            const themeName =
+                workerToRenderMessage.setDashboardColorTheme.themeName;
+            runInAction(() => (this.selectedDashboardTheme = themeName));
+        } else if (workerToRenderMessage.getLvglScreenByName) {
+            return this.lgvlPageRuntime?.getLvglScreenByName(
+                workerToRenderMessage.getLvglScreenByName.name
+            );
+        } else if (workerToRenderMessage.getLvglObjectByName) {
+            return this.lgvlPageRuntime?.getLvglObjectByName(
+                workerToRenderMessage.getLvglObjectByName.name
+            );
+        } else if (workerToRenderMessage.getLvglGroupByName) {
+            return this.lgvlPageRuntime?.getLvglGroupByName(
+                workerToRenderMessage.getLvglGroupByName.name
+            );
+        } else if (workerToRenderMessage.getLvglStyleByName) {
+            return this.lgvlPageRuntime?.getLvglStyleByName(
+                workerToRenderMessage.getLvglStyleByName.name
+            );
         } else if (workerToRenderMessage.getLvglImageByName) {
             return (
                 this.lgvlPageRuntime?.getBitmapPtrByName(
@@ -392,6 +418,10 @@ export class WasmRuntime extends RemoteRuntime {
             this.lgvlPageRuntime?.removeStyle(
                 workerToRenderMessage.lvglObjRemoveStyle.targetObj,
                 workerToRenderMessage.lvglObjRemoveStyle.styleIndex
+            );
+        } else if (workerToRenderMessage.lvglSetColorTheme) {
+            this.lgvlPageRuntime?.setColorTheme(
+                workerToRenderMessage.lvglSetColorTheme.themeName
             );
         }
         this.onWorkerMessageAsync(workerToRenderMessage);
@@ -558,8 +588,9 @@ export class WasmRuntime extends RemoteRuntime {
             wheel: this.isPaused
                 ? undefined
                 : {
+                      updated: this.wheelUpdated,
                       deltaY: this.wheelDeltaY,
-                      clicked: this.wheelClicked
+                      pressed: this.wheelPressed
                   },
             pointerEvents: this.isPaused ? undefined : this.pointerEvents,
             keysPressed: this.isPaused ? undefined : this.keysPressed,
@@ -570,8 +601,8 @@ export class WasmRuntime extends RemoteRuntime {
 
         this.worker.postMessage(message);
 
+        this.wheelUpdated = false;
         this.wheelDeltaY = 0;
-        this.wheelClicked = 0;
         this.pointerEvents = [];
         this.keysPressed = [];
     };
@@ -1284,8 +1315,10 @@ export const WasmCanvas = observer(
             }
 
             if (event.buttons == 4) {
-                wasmRuntime.wheelClicked = 1;
+                wasmRuntime.wheelUpdated = true;
+                wasmRuntime.wheelPressed = 1;
             }
+
             canvas.setPointerCapture(event.pointerId);
             this.sendPointerEvent(event);
         };
@@ -1299,6 +1332,13 @@ export const WasmCanvas = observer(
             if (!canvas) {
                 return;
             }
+
+            const wasmRuntime = this.context.runtime as WasmRuntime;
+            if (wasmRuntime) {
+                wasmRuntime.wheelUpdated = true;
+                wasmRuntime.wheelPressed = 0;
+            }
+
             canvas.releasePointerCapture(event.pointerId);
             this.sendPointerEvent(event);
         };
@@ -1308,19 +1348,32 @@ export const WasmCanvas = observer(
             if (!canvas) {
                 return;
             }
+
+            const wasmRuntime = this.context.runtime as WasmRuntime;
+            if (wasmRuntime) {
+                wasmRuntime.wheelUpdated = true;
+                wasmRuntime.wheelPressed = 0;
+            }
+
             canvas.releasePointerCapture(event.pointerId);
             this.sendPointerEvent(event);
         };
 
         onWheel = (event: WheelEvent) => {
-            if (this.canvasRef.current) {
-                this.canvasRef.current.focus();
+            if (!this.canvasRef.current) {
+                return;
             }
+
+            event.preventDefault();
+            event.stopPropagation();
+
+            this.canvasRef.current.focus();
 
             const wasmRuntime = this.context.runtime as WasmRuntime;
             if (!wasmRuntime) {
                 return;
             }
+            wasmRuntime.wheelUpdated = true;
             wasmRuntime.wheelDeltaY += event.deltaY;
         };
 
@@ -1399,7 +1452,9 @@ export const WasmCanvas = observer(
                 this.onPointerCancel,
                 true
             );
-            document.addEventListener("wheel", this.onWheel, true);
+            canvas.addEventListener("wheel", this.onWheel, {
+                passive: false
+            });
 
             canvas.focus();
         }
@@ -1425,7 +1480,7 @@ export const WasmCanvas = observer(
                     this.onPointerCancel,
                     true
                 );
-                document.removeEventListener("wheel", this.onWheel, true);
+                canvas.removeEventListener("wheel", this.onWheel, false);
             }
         }
 

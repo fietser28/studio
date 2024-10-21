@@ -20,7 +20,7 @@ import {
     isEnumType,
     getEnumTypeNameFromType
 } from "project-editor/features/variable/value-type";
-import { MessageType } from "project-editor/core/object";
+import { IEezObject, MessageType } from "project-editor/core/object";
 import {
     getLvglBitmapSourceFile,
     getLvglStylePropName
@@ -28,6 +28,16 @@ import {
 import { sourceRootDir } from "eez-studio-shared/util";
 import { getSelectorBuildCode } from "project-editor/lvgl/style-helper";
 import type { LVGLGroup } from "./groups";
+import { showBuildImageInfoDialog } from "./build-image-info-dialog";
+import tinycolor from "tinycolor2";
+import { GENERATED_NAME_PREFIX } from "./identifiers";
+
+interface Identifiers {
+    identifiers: string[];
+    widgetToIdentifier: Map<LVGLWidget, string>;
+    widgetToAccessor: Map<LVGLWidget, string>;
+    widgetToIndex: Map<LVGLWidget, number>;
+}
 
 export class LVGLBuild extends Build {
     project: Project;
@@ -35,6 +45,37 @@ export class LVGLBuild extends Build {
     styleNames = new Map<string, string>();
     fontNames = new Map<string, string>();
     bitmapNames = new Map<string, string>();
+
+    updateColorCallbacks: (() => void)[] = [];
+
+    isFirstPass: boolean;
+
+    buildObjectsAccessibleFromSourceCode: {
+        fromPage: LVGLWidget[];
+        fromUserWidgets: Map<Page, LVGLWidget[]>;
+    } = {
+        fromPage: [], // all pages share the same Set
+        fromUserWidgets: new Map() // different Set for each user widget
+    };
+
+    lvglObjectIdentifiers: {
+        fromPage: Identifiers;
+        fromUserWidgets: Map<Page, Identifiers>;
+    } = {
+        fromPage: {
+            identifiers: [],
+            widgetToIdentifier: new Map(),
+            widgetToAccessor: new Map(),
+            widgetToIndex: new Map()
+        },
+        fromUserWidgets: new Map()
+    };
+
+    fileStaticVars: {
+        id: string;
+        decl: string;
+        varName: string;
+    }[] = [];
 
     constructor(public assets: Assets) {
         super();
@@ -44,6 +85,230 @@ export class LVGLBuild extends Build {
         this.buildStyleNames();
         this.buildFontNames();
         this.buildBitmapNames();
+    }
+
+    async firtsPassStart() {
+        // PASS 1 (find out which LVGL objects are accessible through global objects structure)
+        this.isFirstPass = true;
+
+        for (const page of this.pages) {
+            if (!page.isUsedAsUserWidget) {
+                this.markObjectAccessibleFromSourceCode(page.lvglScreenWidget!);
+            }
+        }
+    }
+
+    async firstPassFinish() {
+        await this.buildScreensDef();
+        await this.buildStylesDef();
+
+        this.finalizeObjectAccessibleFromSourceCodeTable();
+        this.isFirstPass = false;
+        this.updateColorCallbacks = [];
+    }
+
+    markObjectAccessibleFromSourceCode(widget: LVGLWidget) {
+        const page = getAncestorOfType(
+            widget,
+            ProjectEditor.PageClass.classInfo
+        ) as Page;
+
+        if (page.isUsedAsUserWidget) {
+            let widgets =
+                this.buildObjectsAccessibleFromSourceCode.fromUserWidgets.get(
+                    page
+                );
+
+            if (!widgets) {
+                widgets = [];
+                this.buildObjectsAccessibleFromSourceCode.fromUserWidgets.set(
+                    page,
+                    widgets
+                );
+            }
+
+            if (!widgets.includes(widget)) {
+                widgets.push(widget);
+            }
+        } else {
+            if (
+                !this.buildObjectsAccessibleFromSourceCode.fromPage.includes(
+                    widget
+                )
+            ) {
+                this.buildObjectsAccessibleFromSourceCode.fromPage.push(widget);
+            }
+        }
+    }
+
+    finalizeObjectAccessibleFromSourceCodeTable() {
+        let genIndex = 0;
+
+        function generateUniqueObjectName() {
+            return GENERATED_NAME_PREFIX + genIndex++;
+        }
+
+        function addPageIdentifiers(
+            widgets: LVGLWidget[],
+            pageIdentifiers: Identifiers,
+            prefix: string,
+            isUserWidget: boolean
+        ) {
+            let startIndex = isUserWidget
+                ? pageIdentifiers.identifiers.length
+                : 0;
+
+            for (const widget of widgets) {
+                const identifier = widget.identifier
+                    ? getName(
+                          "",
+                          widget.identifier,
+                          NamingConvention.UnderscoreLowerCase
+                      )
+                    : generateUniqueObjectName();
+
+                pageIdentifiers.widgetToIdentifier.set(
+                    widget,
+                    prefix + identifier
+                );
+
+                pageIdentifiers.widgetToAccessor.set(
+                    widget,
+                    isUserWidget
+                        ? `((lv_obj_t **)&objects)[startWidgetIndex + ${
+                              pageIdentifiers.identifiers.length - startIndex
+                          }]`
+                        : `objects.${prefix + identifier}`
+                );
+
+                pageIdentifiers.widgetToIndex.set(
+                    widget,
+                    pageIdentifiers.identifiers.length - startIndex
+                );
+
+                pageIdentifiers.identifiers.push(prefix + identifier);
+
+                if (widget instanceof ProjectEditor.LVGLUserWidgetWidgetClass) {
+                    const page = widget.userWidgetPage;
+                    if (page) {
+                        addIdentifiersForUserWidget(
+                            prefix +
+                                identifier +
+                                USER_WIDGET_IDENTIFIER_SEPARATOR,
+                            page,
+                            pageIdentifiers
+                        );
+                    }
+                }
+            }
+        }
+
+        const addIdentifiersForUserWidget = (
+            prefix: string,
+            page: Page,
+            pageIdentifiers: Identifiers
+        ) => {
+            let savedGenIndex = genIndex;
+            genIndex = 0;
+
+            const widgets =
+                this.buildObjectsAccessibleFromSourceCode.fromUserWidgets.get(
+                    page
+                );
+            if (widgets) {
+                addPageIdentifiers(widgets, pageIdentifiers, prefix, true);
+            }
+
+            genIndex = savedGenIndex;
+        };
+
+        for (const page of this.pages) {
+            if (!page.isUsedAsUserWidget) {
+                const identifier = getName(
+                    "",
+                    page.name,
+                    NamingConvention.UnderscoreLowerCase
+                );
+
+                this.lvglObjectIdentifiers.fromPage.widgetToIdentifier.set(
+                    page.lvglScreenWidget!,
+                    identifier
+                );
+
+                this.lvglObjectIdentifiers.fromPage.widgetToAccessor.set(
+                    page.lvglScreenWidget!,
+                    `objects.${identifier}`
+                );
+
+                this.lvglObjectIdentifiers.fromPage.widgetToIndex.set(
+                    page.lvglScreenWidget!,
+                    this.lvglObjectIdentifiers.fromPage.identifiers.length
+                );
+
+                this.lvglObjectIdentifiers.fromPage.identifiers.push(
+                    identifier
+                );
+            } else {
+                const widgets =
+                    this.buildObjectsAccessibleFromSourceCode.fromUserWidgets.get(
+                        page
+                    ) ?? [];
+
+                let pageIdentifiers: Identifiers = {
+                    identifiers: [],
+                    widgetToIdentifier: new Map(),
+                    widgetToAccessor: new Map(),
+                    widgetToIndex: new Map()
+                };
+
+                addPageIdentifiers(widgets, pageIdentifiers, "", true);
+
+                this.lvglObjectIdentifiers.fromUserWidgets.set(
+                    page,
+                    pageIdentifiers
+                );
+            }
+        }
+
+        genIndex = 0;
+
+        const widgets =
+            this.buildObjectsAccessibleFromSourceCode.fromPage.filter(
+                widget =>
+                    !this.lvglObjectIdentifiers.fromPage.widgetToIdentifier.get(
+                        widget
+                    )
+            );
+
+        addPageIdentifiers(
+            widgets,
+            this.lvglObjectIdentifiers.fromPage,
+            "",
+            false
+        );
+    }
+
+    isAccessibleFromSourceCode(widget: LVGLWidget) {
+        if (widget.identifier) {
+            return true;
+        }
+
+        let page = getAncestorOfType(
+            widget,
+            ProjectEditor.PageClass.classInfo
+        ) as Page;
+
+        if (page.isUsedAsUserWidget) {
+            return (
+                this.buildObjectsAccessibleFromSourceCode.fromUserWidgets
+                    .get(page)
+                    ?.includes(widget) ?? false
+            );
+        }
+
+        return this.buildObjectsAccessibleFromSourceCode.fromPage.includes(
+            widget
+        );
     }
 
     get pages() {
@@ -203,75 +468,139 @@ export class LVGLBuild extends Build {
         );
     }
 
-    getLvglObjectIdentifierInSourceCode(lvglObject: Page | LVGLWidget) {
-        return this.project._store.lvglIdentifiers.getIdentifier(lvglObject)
-            .identifier;
-    }
-
-    getWidgetObjectIndex(lvglWidget: LVGLWidget) {
-        const identifier =
-            this.project._store.lvglIdentifiers.getIdentifier(lvglWidget);
-
-        return identifier.index;
-    }
-
-    getLvglObjectAccessor(lvglObject: Page | LVGLWidget) {
-        const identifier = this.getLvglObjectIdentifierInSourceCode(lvglObject);
-
-        if (lvglObject instanceof ProjectEditor.LVGLWidgetClass) {
-            const page = getAncestorOfType(
-                lvglObject,
-                ProjectEditor.PageClass.classInfo
-            ) as Page;
-
-            if (page.isUsedAsUserWidget) {
-                return `((lv_obj_t **)&objects)[startWidgetIndex + ${this.getWidgetObjectIndex(
-                    lvglObject
-                )}]`;
-            }
-        }
-
-        return `objects.${identifier}`;
-    }
-
-    getLvglWidgetAccessorInEventHandler(widget: LVGLWidget) {
-        let page = getAncestorOfType(
-            widget,
-            ProjectEditor.PageClass.classInfo
-        ) as Page;
-
-        if (page._lvglUserWidgetOfPageCopy) {
-            const identifiers = [
-                this.getLvglObjectIdentifierInSourceCode(widget)
-            ];
-
-            while (true) {
-                const userWidgetPage = getAncestorOfType(
-                    page._lvglUserWidgetOfPageCopy,
-                    ProjectEditor.PageClass.classInfo
-                ) as Page;
-
-                if (!userWidgetPage._lvglUserWidgetOfPageCopy) {
-                    break;
-                }
-
-                identifiers.unshift(
-                    this.getLvglObjectIdentifierInSourceCode(
-                        page._lvglUserWidgetOfPageCopy
-                    )
+    getPageIdentifiers(object: IEezObject) {
+        const flow = getAncestorOfType(
+            object,
+            ProjectEditor.FlowClass.classInfo
+        );
+        if (
+            flow instanceof ProjectEditor.PageClass &&
+            flow.isUsedAsUserWidget
+        ) {
+            const pageIdentifiers =
+                this.lvglObjectIdentifiers.fromUserWidgets.get(flow);
+            if (!pageIdentifiers) {
+                this.assets.projectStore.outputSectionsStore.write(
+                    Section.OUTPUT,
+                    MessageType.ERROR,
+                    "Page identifiers not found",
+                    object
                 );
-
-                page = userWidgetPage;
             }
-
-            identifiers.unshift(
-                this.getLvglObjectAccessor(page._lvglUserWidgetOfPageCopy)
-            );
-
-            return identifiers.join(USER_WIDGET_IDENTIFIER_SEPARATOR);
-        } else {
-            return this.getLvglObjectAccessor(widget);
+            return pageIdentifiers;
         }
+        return this.lvglObjectIdentifiers.fromPage;
+    }
+
+    getLvglObjectIdentifierInSourceCode(widget: LVGLWidget) {
+        if (this.isFirstPass) {
+            this.markObjectAccessibleFromSourceCode(widget);
+            return "";
+        }
+
+        const pageIdentifiers = this.getPageIdentifiers(widget);
+        if (!pageIdentifiers) {
+            return "";
+        }
+
+        const identifier = pageIdentifiers.widgetToIdentifier.get(widget);
+        if (identifier == undefined) {
+            this.assets.projectStore.outputSectionsStore.write(
+                Section.OUTPUT,
+                MessageType.ERROR,
+                `Widget identifier not found`,
+                widget
+            );
+            return "";
+        }
+
+        return identifier;
+    }
+
+    getWidgetObjectIndex(widget: LVGLWidget) {
+        if (this.isFirstPass) {
+            this.markObjectAccessibleFromSourceCode(widget);
+            return 0;
+        }
+
+        const pageIdentifiers = this.getPageIdentifiers(widget);
+        if (!pageIdentifiers) {
+            return 0;
+        }
+
+        const index = pageIdentifiers.widgetToIndex.get(widget);
+
+        if (index == undefined) {
+            this.assets.projectStore.outputSectionsStore.write(
+                Section.OUTPUT,
+                MessageType.ERROR,
+                `Widget index not found`,
+                widget
+            );
+            return 0;
+        }
+
+        return index;
+    }
+
+    getWidgetObjectIndexByName(fromObject: IEezObject, objectName: string) {
+        if (this.isFirstPass) {
+            return 0;
+        }
+
+        const pageIdentifiers = this.getPageIdentifiers(fromObject);
+        if (!pageIdentifiers) {
+            return 0;
+        }
+        const index = pageIdentifiers.identifiers.indexOf(objectName);
+
+        if (index == -1) {
+            if (!this.isFirstPass) {
+                this.assets.projectStore.outputSectionsStore.write(
+                    Section.OUTPUT,
+                    MessageType.ERROR,
+                    `Widget index not found for "${objectName}"`,
+                    fromObject
+                );
+                return 0;
+            }
+        }
+
+        return index;
+    }
+
+    getLvglObjectAccessor(widget: LVGLWidget) {
+        if (this.isFirstPass) {
+            this.markObjectAccessibleFromSourceCode(widget);
+            return "";
+        }
+
+        const pageIdentifiers = this.getPageIdentifiers(widget);
+        if (!pageIdentifiers) {
+            return 0;
+        }
+
+        const accessor = pageIdentifiers.widgetToAccessor.get(widget);
+        if (accessor == undefined) {
+            this.assets.projectStore.outputSectionsStore.write(
+                Section.OUTPUT,
+                MessageType.ERROR,
+                `Widget accessor not found`,
+                widget
+            );
+            return "";
+        }
+
+        return accessor;
+    }
+
+    getLvglWidgetAccessorInEventHandler(widgetPath: LVGLWidget[]) {
+        return (
+            "objects." +
+            widgetPath
+                .map(widget => this.getLvglObjectIdentifierInSourceCode(widget))
+                .join(USER_WIDGET_IDENTIFIER_SEPARATOR)
+        );
     }
 
     getEventHandlerCallbackName(widget: LVGLWidget) {
@@ -343,6 +672,110 @@ export class LVGLBuild extends Build {
         return `groups.${group.name}`;
     }
 
+    getColorAccessor(color: string, themeIndex: string) {
+        let colorValue;
+        if (color.startsWith("#")) {
+            colorValue = color;
+        } else {
+            const colorIndex = this.project.colorToIndexMap.get(color);
+            if (colorIndex != undefined) {
+                return {
+                    colorAccessor: `theme_colors[${themeIndex}][${colorIndex}]`,
+                    fromTheme: true
+                };
+            }
+            colorValue = color;
+        }
+
+        return {
+            colorAccessor: this.getColorHexStr(colorValue),
+            fromTheme: false
+        };
+    }
+
+    getColorHexStr(colorValue: string) {
+        const rgb = tinycolor(colorValue).toRgb();
+
+        // result is in BGR format
+        let colorNum =
+            (rgb.b << 0) | (rgb.g << 8) | (rgb.r << 16) | (255 << 24);
+
+        // signed to unsigned
+        colorNum = colorNum >>> 0;
+
+        return "0x" + colorNum.toString(16).padStart(8, "0");
+    }
+
+    buildColor<T>(
+        color: string,
+        getParams: () => T,
+        callback: (color: string, params: T) => void,
+        updateCallback: (color: string, params: T) => void
+    ) {
+        const { colorAccessor, fromTheme } = this.getColorAccessor(color, "0");
+        callback(colorAccessor, getParams());
+
+        if (!this.isFirstPass && fromTheme) {
+            this.updateColorCallbacks.push(() => {
+                const { colorAccessor } = this.getColorAccessor(
+                    color,
+                    "theme_index"
+                );
+                updateCallback(colorAccessor, getParams());
+            });
+        }
+    }
+
+    buildColor2<T>(
+        color1: string,
+        color2: string,
+        getParams: () => T,
+        callback: (color1: string, color2: string, params: T) => void,
+        updateCallback: (color1: string, color2: string, params: T) => void
+    ) {
+        const { colorAccessor: color1Accessor, fromTheme: color1FromTheme } =
+            this.getColorAccessor(color1, "0");
+
+        const { colorAccessor: color2Accessor, fromTheme: color2FromTheme } =
+            this.getColorAccessor(color2, "0");
+
+        callback(color1Accessor, color2Accessor, getParams());
+
+        if (!this.isFirstPass && (color1FromTheme || color2FromTheme)) {
+            this.updateColorCallbacks.push(() => {
+                const { colorAccessor: color1Accessor } = this.getColorAccessor(
+                    color1,
+                    "theme_index"
+                );
+                const { colorAccessor: color2Accessor } = this.getColorAccessor(
+                    color2,
+                    "theme_index"
+                );
+                updateCallback(color1Accessor, color2Accessor, getParams());
+            });
+        }
+    }
+
+    genFileStaticVar(id: string, type: string, prefixName: string) {
+        let staticVar = this.fileStaticVars.find(
+            fileStaticVar => fileStaticVar.id == id
+        );
+        if (!staticVar) {
+            const varName = prefixName + this.fileStaticVars.length;
+            staticVar = {
+                id,
+                decl: `static ${type} ${varName};`,
+                varName
+            };
+            this.fileStaticVars.push(staticVar);
+        }
+        return staticVar.varName;
+    }
+
+    assingToFileStaticVar(varName: string, value: string) {
+        this.line(`${varName} = ${value};`);
+    }
+
     async buildScreensDecl() {
         this.startBuild();
         const build = this;
@@ -361,17 +794,19 @@ export class LVGLBuild extends Build {
             build.line("");
             build.line(`extern groups_t groups;`);
             build.line("");
+            build.line(`void ui_create_groups();`);
+            build.line("");
         }
 
         // objects
         build.line(`typedef struct _objects_t {`);
         build.indent();
 
-        this.project._store.lvglIdentifiers.identifiersArray
-            .get(this.project.pages[0])!
-            .forEach((lvglIdentifier, i) => {
-                build.line(`lv_obj_t *${lvglIdentifier.identifier};`);
-            });
+        this.lvglObjectIdentifiers.fromPage.identifiers.forEach(
+            (identifier, i) => {
+                build.line(`lv_obj_t *${identifier};`);
+            }
+        );
 
         build.unindent();
         build.line(`} objects_t;`);
@@ -423,6 +858,40 @@ export class LVGLBuild extends Build {
             }
         }
 
+        if (this.updateColorCallbacks.length > 0) {
+            build.line("");
+            build.line(`enum Themes {`);
+            build.indent();
+            this.project.themes.forEach(theme => {
+                build.line(
+                    `THEME_ID_${getName(
+                        "",
+                        theme.name,
+                        NamingConvention.UnderscoreUpperCase
+                    )},`
+                );
+            });
+            build.unindent();
+            build.line(`};`);
+            build.line(`enum Colors {`);
+            build.indent();
+            this.project.colors.forEach(color => {
+                build.line(
+                    `COLOR_ID_${getName(
+                        "",
+                        color.name,
+                        NamingConvention.UnderscoreUpperCase
+                    )},`
+                );
+            });
+            build.unindent();
+            build.line(`};`);
+            build.line("void change_color_theme(uint32_t themeIndex);");
+            build.line(
+                `extern uint32_t theme_colors[${this.project.themes.length}][${this.project.colors.length}];`
+            );
+        }
+
         return this.result;
     }
 
@@ -435,11 +904,20 @@ export class LVGLBuild extends Build {
 
         if (this.project.lvglGroups.groups.length > 0) {
             build.line(`groups_t groups;`);
+            build.line("static bool groups_created = false;");
+            build.line("");
         }
 
         build.line(`objects_t objects;`);
         build.line(`lv_obj_t *tick_value_change_obj;`);
         build.line("");
+
+        if (this.fileStaticVars.length > 0) {
+            this.fileStaticVars.forEach(fileStaticVar =>
+                build.line(fileStaticVar.decl)
+            );
+            build.line("");
+        }
 
         if (build.assets.projectStore.projectTypeTraits.hasFlowSupport) {
             for (const page of this.pages) {
@@ -462,6 +940,19 @@ export class LVGLBuild extends Build {
                         build.line(
                             `void *flowState = lv_event_get_user_data(e);`
                         );
+
+                        build.line("");
+
+                        if (widget.hasEventHandler) {
+                            widget.buildEventHandler(build);
+                        }
+
+                        if (
+                            widget.eventHandlers.length > 0 &&
+                            widget.hasEventHandler
+                        ) {
+                            build.line("");
+                        }
 
                         for (const eventHandler of widget.eventHandlers) {
                             if (
@@ -531,10 +1022,6 @@ export class LVGLBuild extends Build {
                             }
                             build.unindent();
                             build.line("}");
-                        }
-
-                        if (widget.hasEventHandler) {
-                            widget.buildEventHandler(build);
                         }
 
                         build.unindent();
@@ -692,6 +1179,28 @@ export class LVGLBuild extends Build {
             build.line("");
         }
 
+        if (this.updateColorCallbacks.length > 0) {
+            build.line(`void change_color_theme(uint32_t theme_index) {`);
+            build.indent();
+            this.updateColorCallbacks.forEach((callback, i) => {
+                callback();
+                build.line("");
+            });
+
+            build.pages
+                .filter(page => !page.isUsedAsUserWidget)
+                .forEach(page =>
+                    build.line(
+                        `lv_obj_invalidate(objects.${this.getScreenIdentifier(
+                            page
+                        )});`
+                    )
+                );
+
+            build.unindent();
+            build.line("}");
+        }
+
         return this.result;
     }
 
@@ -709,6 +1218,7 @@ export class LVGLBuild extends Build {
         this.startBuild();
         const build = this;
 
+        //
         if (
             this.assets.projectStore.projectTypeTraits.hasFlowSupport &&
             this.styles.length > 0
@@ -722,18 +1232,101 @@ export class LVGLBuild extends Build {
             build.line("");
         }
 
-        build.line("void create_screens() {");
-        build.indent();
-
+        //
         if (this.project.lvglGroups.groups.length > 0) {
+            build.line("void ui_create_groups() {");
+            build.indent();
+
+            build.line("if (!groups_created) {");
+            build.indent();
+
             this.project.lvglGroups.groups.forEach(group => {
                 build.line(
                     `${build.getGroupVariableName(group)} = lv_group_create();`
                 );
             });
+            if (this.assets.projectStore.projectTypeTraits.hasFlowSupport) {
+                build.line(
+                    "eez_flow_init_groups((lv_group_t **)&groups, sizeof(groups) / sizeof(lv_group_t *));"
+                );
+            }
+
+            build.line("groups_created = true;");
+
+            build.unindent();
+            build.line("}");
+
+            build.unindent();
+            build.line("}");
+
+            build.line("");
+        }
+
+        if (this.assets.projectStore.projectTypeTraits.hasFlowSupport) {
+            if (this.pages.length > 0) {
+                build.line(
+                    `static const char *screen_names[] = { ${this.pages
+                        .map(page => `"${page.name}"`)
+                        .join(", ")} };`
+                );
+            }
+            if (this.lvglObjectIdentifiers.fromPage.identifiers.length > 0) {
+                build.line(
+                    `static const char *object_names[] = { ${this.lvglObjectIdentifiers.fromPage.identifiers
+                        .map(identifier => `"${identifier}"`)
+                        .join(", ")} };`
+                );
+            }
+            if (this.project.lvglGroups.groups.length > 0) {
+                build.line(
+                    `static const char *group_names[] = { ${this.project.lvglGroups.groups
+                        .map(group => `"${group.name}"`)
+                        .join(", ")} };`
+                );
+            }
+            if (this.styles.length > 0) {
+                build.line(
+                    `static const char *style_names[] = { ${this.styles
+                        .map(style => `"${style.name}"`)
+                        .join(", ")} };`
+                );
+            }
+            if (this.updateColorCallbacks.length > 0) {
+                build.line(
+                    `static const char *theme_names[] = { ${this.project.themes
+                        .map(theme => `"${theme.name}"`)
+                        .join(", ")} };`
+                );
+            }
+            build.line("");
+        }
+
+        //
+        if (this.updateColorCallbacks.length > 0) {
             build.line(
-                "eez_flow_init_groups((lv_group_t **)&groups, sizeof(groups) / sizeof(lv_group_t *));"
+                `uint32_t theme_colors[${this.project.themes.length}][${this.project.colors.length}] = {`
             );
+            build.indent();
+            this.project.themes.map(theme => {
+                const colors = this.project.colors.map(color =>
+                    this.getColorHexStr(
+                        this.project.getThemeColor(theme.objID, color.objID)
+                    )
+                );
+
+                build.line(`{ ${colors.join(", ")} },`);
+            });
+            build.unindent();
+            build.line("};");
+            build.line("");
+        }
+
+        //
+        build.line("void create_screens() {");
+        build.indent();
+
+        if (this.project.lvglGroups.groups.length > 0) {
+            build.line("ui_create_groups();");
             build.line("");
         }
 
@@ -742,6 +1335,35 @@ export class LVGLBuild extends Build {
             this.styles.length > 0
         ) {
             build.line("eez_flow_init_styles(add_style, remove_style);");
+            build.line("");
+        }
+
+        if (this.assets.projectStore.projectTypeTraits.hasFlowSupport) {
+            if (this.pages.length > 0) {
+                build.line(
+                    `eez_flow_init_screen_names(screen_names, sizeof(screen_names) / sizeof(const char *));`
+                );
+            }
+            if (this.lvglObjectIdentifiers.fromPage.identifiers.length > 0) {
+                build.line(
+                    `eez_flow_init_object_names(object_names, sizeof(object_names) / sizeof(const char *));`
+                );
+            }
+            if (this.project.lvglGroups.groups.length > 0) {
+                build.line(
+                    `eez_flow_init_group_names(group_names, sizeof(group_names) / sizeof(const char *));`
+                );
+            }
+            if (this.styles.length > 0) {
+                build.line(
+                    `eez_flow_init_style_names(style_names, sizeof(style_names) / sizeof(const char *));`
+                );
+            }
+            if (this.updateColorCallbacks.length > 0) {
+                build.line(
+                    `eez_flow_init_themes(theme_names, sizeof(theme_names) / sizeof(const char *), change_color_theme);`
+                );
+            }
             build.line("");
         }
 
@@ -865,7 +1487,7 @@ extern const ext_img_desc_t images[${this.bitmaps.length || 1}];
                     build.line("");
                     build.line(`enum {`);
                     build.indent();
-                    for (let i = 0; i < this.pages.length; i++) {
+                    for (let i = 0; i < action.userProperties.length; i++) {
                         build.line(
                             `ACTION_${getName(
                                 "",
@@ -1055,6 +1677,9 @@ extern const ext_img_desc_t images[${this.bitmaps.length || 1}];
         this.startBuild();
         const build = this;
 
+        build.line(`#include "screens.h"`);
+        build.line("");
+
         if (this.styles.length > 0) {
             for (const lvglStyle of this.styles) {
                 build.line("//");
@@ -1094,6 +1719,7 @@ extern const ext_img_desc_t images[${this.bitmaps.length || 1}];
                             if (lvglStyle.definition) {
                                 lvglStyle.definition.lvglBuildStyle(
                                     build,
+                                    lvglStyle,
                                     part,
                                     state
                                 );
@@ -1273,19 +1899,26 @@ extern const ext_img_desc_t images[${this.bitmaps.length || 1}];
     }
 
     async copyBitmapFiles() {
-        if (!this.project.settings.build.destinationFolder) {
+        const destinationFolder = this.project.settings.build.destinationFolder;
+        if (!destinationFolder) {
             return;
         }
-        for (const bitmap of this.bitmaps) {
-            const output = "ui_image_" + this.bitmapNames.get(bitmap.objID)!;
 
-            try {
-                let source = await getLvglBitmapSourceFile(
-                    bitmap,
-                    this.getImageVariableName(bitmap)
-                );
+        let showInfoDialog = false;
 
-                source = `#ifdef __has_include
+        await Promise.all(
+            this.bitmaps.map(bitmap =>
+                (async () => {
+                    const output =
+                        "ui_image_" + this.bitmapNames.get(bitmap.objID)!;
+
+                    try {
+                        let source = await getLvglBitmapSourceFile(
+                            bitmap,
+                            this.getImageVariableName(bitmap)
+                        );
+
+                        source = `#ifdef __has_include
     #if __has_include("lvgl.h")
         #ifndef LV_LVGL_H_INCLUDE_SIMPLE
             #define LV_LVGL_H_INCLUDE_SIMPLE
@@ -1294,48 +1927,79 @@ extern const ext_img_desc_t images[${this.bitmaps.length || 1}];
 #endif
 ${source}`;
 
-                await writeTextFile(
-                    this.project._store.getAbsoluteFilePath(
-                        this.project.settings.build.destinationFolder
-                    ) +
-                        "/" +
-                        output +
-                        ".c",
-                    source
-                );
-            } catch (err) {
-                this.project._store.outputSectionsStore.write(
-                    Section.OUTPUT,
-                    MessageType.ERROR,
-                    `Error genereting bitmap '${output}.c' file: ${err}`
-                );
-            }
+                        await writeTextFile(
+                            this.project._store.getAbsoluteFilePath(
+                                destinationFolder
+                            ) +
+                                "/" +
+                                (this.project.settings.build
+                                    .separateFolderForImagesAndFonts
+                                    ? "images/"
+                                    : "") +
+                                output +
+                                ".c",
+                            source
+                        );
+                    } catch (err) {
+                        this.project._store.outputSectionsStore.write(
+                            Section.OUTPUT,
+                            MessageType.ERROR,
+                            `Error genereting bitmap file '${output}.c': ${err}`
+                        );
+                        if (this.isV9) {
+                            showInfoDialog = true;
+                        }
+                    }
+                })()
+            )
+        );
+
+        if (showInfoDialog) {
+            showBuildImageInfoDialog();
         }
     }
 
     async copyFontFiles() {
-        if (!this.project.settings.build.destinationFolder) {
+        const destinationFolder = this.project.settings.build.destinationFolder;
+        if (!destinationFolder) {
             return;
         }
-        for (const font of this.fonts) {
-            if (font.lvglSourceFile) {
-                const output = getName(
-                    "ui_font_",
-                    font.name || "",
-                    NamingConvention.UnderscoreLowerCase
-                );
 
-                await writeTextFile(
-                    this.project._store.getAbsoluteFilePath(
-                        this.project.settings.build.destinationFolder
-                    ) +
-                        "/" +
-                        output +
-                        ".c",
-                    font.lvglSourceFile
-                );
-            }
-        }
+        await Promise.all(
+            this.fonts.map(font =>
+                (async () => {
+                    if (font.lvglSourceFile) {
+                        const output = getName(
+                            "ui_font_",
+                            font.name || "",
+                            NamingConvention.UnderscoreLowerCase
+                        );
+
+                        try {
+                            await writeTextFile(
+                                this.project._store.getAbsoluteFilePath(
+                                    destinationFolder
+                                ) +
+                                    "/" +
+                                    (this.project.settings.build
+                                        .separateFolderForImagesAndFonts
+                                        ? "fonts/"
+                                        : "") +
+                                    output +
+                                    ".c",
+                                font.lvglSourceFile
+                            );
+                        } catch (err) {
+                            this.project._store.outputSectionsStore.write(
+                                Section.OUTPUT,
+                                MessageType.ERROR,
+                                `Error writing font file '${output}.c': ${err}`
+                            );
+                        }
+                    }
+                })()
+            )
+        );
     }
 }
 

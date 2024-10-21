@@ -30,7 +30,8 @@ import {
     CustomInput,
     CustomOutput,
     createActionComponentClass,
-    makeExpressionProperty
+    makeExpressionProperty,
+    checkProperty
 } from "project-editor/flow/component";
 
 import { Page } from "project-editor/features/page/page";
@@ -45,7 +46,8 @@ import { getObjectVariableTypeFromType } from "project-editor/features/variable/
 // ACTIONS
 import {
     OutputActionComponent,
-    CallActionActionComponent
+    CallActionActionComponent,
+    CommentActionComponent
 } from "project-editor/flow/components/actions";
 import "project-editor/flow/components/actions/execute-command";
 import "project-editor/flow/components/actions/stream";
@@ -126,6 +128,8 @@ import { migrateLvglVersion } from "./lvgl/migrate";
 import { FlowTabState } from "project-editor/flow/flow-tab-state";
 import { Color } from "project-editor/features/style/theme";
 import { LVGLSpinboxWidget } from "./lvgl/widgets/Spinbox";
+import { UserProperty } from "./flow/user-property";
+import { LVGLActionComponent } from "project-editor/lvgl/actions";
 
 export const conditionalStyleConditionProperty = makeExpressionProperty(
     {
@@ -176,6 +180,7 @@ export async function createProjectEditor(
         ActionClass: Action,
         ComponentClass: Component,
         ActionComponentClass: ActionComponent,
+        CommentActionComponentClass: CommentActionComponent,
         WidgetClass: Widget,
         ConnectionLineClass: ConnectionLine,
         UserWidgetWidgetClass: UserWidgetWidget,
@@ -185,6 +190,7 @@ export async function createProjectEditor(
         OutputActionComponentClass: OutputActionComponent,
         CallActionActionComponentClass: CallActionActionComponent,
         VariableClass: Variable,
+        UserPropertyClass: UserProperty,
         GlyphClass: Glyph,
         ScpiCommandClass: ScpiCommand,
         ScpiSubsystemClass: ScpiSubsystem,
@@ -203,6 +209,7 @@ export async function createProjectEditor(
         LVGLStyleClass: LVGLStyle,
         LVGLArcWidgetClass: LVGLArcWidget,
         LVGLSpinboxWidgetClass: LVGLSpinboxWidget,
+        LVGLActionComponentClass: LVGLActionComponent,
         getProject,
         getProjectStore,
         getFlow,
@@ -234,6 +241,7 @@ export async function createProjectEditor(
         createActionComponentClass,
         makeExpressionProperty,
         evalProperty,
+        checkProperty,
         conditionalStyleConditionProperty,
         FlowTabStateClass: FlowTabState,
         BuildFileClass: BuildFile

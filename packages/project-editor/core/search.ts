@@ -340,9 +340,7 @@ export function* searchForObjectDependencies(
                         valueObject.propertyInfo
                             .referencedObjectCollectionPath)) &&
                     (!projectStore.project.projectTypeTraits.hasFlowSupport ||
-                        valueObject.propertyInfo
-                            .referencedObjectCollectionPath !=
-                            "variables/globalVariables")) ||
+                        flowProperty == undefined)) ||
                 valueObject.propertyInfo.type === PropertyType.ThemedColor
             ) {
                 yield {
@@ -489,7 +487,10 @@ export function* searchForReference(
     let identifierType: IdentifierType | undefined;
     let structType: ValueType | undefined;
     let enumType: ValueType | undefined;
-    if (object instanceof ProjectEditor.VariableClass) {
+    if (
+        object instanceof ProjectEditor.VariableClass ||
+        object instanceof ProjectEditor.UserPropertyClass
+    ) {
         let flow = getAncestorOfType(object, ProjectEditor.FlowClass.classInfo);
         if (flow) {
             identifierType = "local-variable";

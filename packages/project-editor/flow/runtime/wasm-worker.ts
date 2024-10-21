@@ -498,6 +498,59 @@ function getBitmapAsDataURL(wasmModuleId: number, name: string) {
     return createWasmValue(WasmFlowRuntime, dataURL);
 }
 
+function setDashboardColorTheme(wasmModuleId: number, themeName: string) {
+    const WasmFlowRuntime = getWasmFlowRuntime(wasmModuleId);
+    if (WasmFlowRuntime) {
+        WasmFlowRuntime.postWorkerToRendererMessage({
+            setDashboardColorTheme: { themeName }
+        });
+    }
+}
+
+function getLvglScreenByName(wasmModuleId: number, name: string) {
+    const WasmFlowRuntime = getWasmFlowRuntime(wasmModuleId);
+    if (!WasmFlowRuntime) {
+        return;
+    }
+
+    return WasmFlowRuntime.postWorkerToRendererMessage({
+        getLvglScreenByName: { name }
+    });
+}
+
+function getLvglObjectByName(wasmModuleId: number, name: string) {
+    const WasmFlowRuntime = getWasmFlowRuntime(wasmModuleId);
+    if (!WasmFlowRuntime) {
+        return;
+    }
+
+    return WasmFlowRuntime.postWorkerToRendererMessage({
+        getLvglObjectByName: { name }
+    });
+}
+
+function getLvglGroupByName(wasmModuleId: number, name: string) {
+    const WasmFlowRuntime = getWasmFlowRuntime(wasmModuleId);
+    if (!WasmFlowRuntime) {
+        return;
+    }
+
+    return WasmFlowRuntime.postWorkerToRendererMessage({
+        getLvglGroupByName: { name }
+    });
+}
+
+function getLvglStyleByName(wasmModuleId: number, name: string) {
+    const WasmFlowRuntime = getWasmFlowRuntime(wasmModuleId);
+    if (!WasmFlowRuntime) {
+        return;
+    }
+
+    return WasmFlowRuntime.postWorkerToRendererMessage({
+        getLvglStyleByName: { name }
+    });
+}
+
 function getLvglImageByName(wasmModuleId: number, name: string) {
     const WasmFlowRuntime = getWasmFlowRuntime(wasmModuleId);
     if (!WasmFlowRuntime) {
@@ -539,6 +592,17 @@ function lvglObjRemoveStyle(
     });
 }
 
+function lvglSetColorTheme(wasmModuleId: number, themeName: string) {
+    const WasmFlowRuntime = getWasmFlowRuntime(wasmModuleId);
+    if (!WasmFlowRuntime) {
+        return;
+    }
+
+    WasmFlowRuntime.postWorkerToRendererMessage({
+        lvglSetColorTheme: { themeName }
+    });
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 (global as any).startToDebuggerMessage = startToDebuggerMessage;
@@ -564,10 +628,16 @@ function lvglObjRemoveStyle(
 (global as any).dashboardObjectValueDecRef = dashboardObjectValueDecRef;
 (global as any).onObjectArrayValueFree = onObjectArrayValueFree;
 (global as any).getBitmapAsDataURL = getBitmapAsDataURL;
+(global as any).setDashboardColorTheme = setDashboardColorTheme;
 (global as any).executeScpi = executeScpi;
+(global as any).getLvglScreenByName = getLvglScreenByName;
+(global as any).getLvglObjectByName = getLvglObjectByName;
+(global as any).getLvglGroupByName = getLvglGroupByName;
+(global as any).getLvglStyleByName = getLvglStyleByName;
 (global as any).getLvglImageByName = getLvglImageByName;
 (global as any).lvglObjAddStyle = lvglObjAddStyle;
 (global as any).lvglObjRemoveStyle = lvglObjRemoveStyle;
+(global as any).lvglSetColorTheme = lvglSetColorTheme;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -835,13 +905,10 @@ export function createWasmWorker(
         }
 
         if (rendererToWorkerMessage.wheel) {
-            if (
-                rendererToWorkerMessage.wheel.deltaY != 0 ||
-                rendererToWorkerMessage.wheel.clicked != 0
-            ) {
+            if (rendererToWorkerMessage.wheel.updated) {
                 WasmFlowRuntime._onMouseWheelEvent(
                     rendererToWorkerMessage.wheel.deltaY,
-                    rendererToWorkerMessage.wheel.clicked
+                    rendererToWorkerMessage.wheel.pressed
                 );
             }
         }
