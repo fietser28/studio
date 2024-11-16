@@ -7,12 +7,14 @@ import { getParent } from "project-editor/core/object";
 import {
     EezValueObject,
     getAncestorOfType,
+    getObjectIcon,
     getPropertiesPanelLabel,
     isObjectExists
 } from "project-editor/store";
 import { PropertyGrid } from "project-editor/ui-components/PropertyGrid";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { Settings } from "../project";
+import { Icon } from "eez-studio-ui/icon";
 
 export const PropertiesPanel = observer(
     class PropertiesPanel extends React.Component {
@@ -44,6 +46,8 @@ export const PropertiesPanel = observer(
                 )
                 .filter(object => isObjectExists(object));
 
+            let icon = null;
+
             if (objects.length == 0) {
                 title = "Nothing selected";
             } else if (objects.length == 1) {
@@ -52,6 +56,7 @@ export const PropertiesPanel = observer(
                     object = getParent(object);
                 }
 
+                icon = getObjectIcon(object);
                 title = getPropertiesPanelLabel(object);
             } else {
                 title = "Multiple objects selected";
@@ -70,6 +75,7 @@ export const PropertiesPanel = observer(
             return (
                 <div className="EezStudio_PropertiesPanel">
                     <div className="EezStudio_PropertiesPanel_Header">
+                        {typeof icon === "string" ? <Icon icon={icon} /> : icon}
                         {title}
                     </div>
                     <div className="EezStudio_PropertiesPanel_Body">

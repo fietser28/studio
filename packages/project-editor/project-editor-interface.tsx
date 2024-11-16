@@ -104,9 +104,10 @@ import type { PropertyInfo } from "project-editor/core/object";
 import type { migrateLvglVersion } from "project-editor/lvgl/migrate";
 import type { FlowTabState } from "project-editor/flow/flow-tab-state";
 import type { Color } from "project-editor/features/style/theme";
+import type { UserProperty } from "project-editor/flow/user-property";
+import type { LVGLActionComponent } from "project-editor/lvgl/actions";
+import type { FlowEditor } from "project-editor/flow/editor/editor";
 import type { LVGLSpinboxWidget } from "./lvgl/widgets/Spinbox";
-import type { UserProperty } from "./flow/user-property";
-import type { LVGLActionComponent } from "./lvgl/actions";
 
 export interface IProjectEditor {
     homeTabs?: Tabs;
@@ -194,6 +195,7 @@ export interface IProjectEditor {
     conditionalStyleConditionProperty: PropertyInfo;
     FlowTabStateClass: typeof FlowTabState;
     BuildFileClass: typeof BuildFile;
+    FlowEditorClass: typeof FlowEditor;
 }
 
 export const ProjectEditor: IProjectEditor = {} as any;

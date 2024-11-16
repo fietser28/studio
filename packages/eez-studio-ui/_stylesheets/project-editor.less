@@ -93,13 +93,16 @@
 
         .EezStudio_ProjectEditor_ToolbarNav_RunEditSwitchControls {
             display: flex;
+            z-index: 1;
+            background-color: @panelHeaderColor;
         }
 
         .EezStudio_ProjectEditor_ToolbarNav_FlowRuntimeControls {
+            display: flex;
             @media (min-width: 1600px) {
                 width: 0;
             }
-            justify-content: "flex-end";
+            justify-content: flex-end;
         }
     }
 }
@@ -502,6 +505,14 @@
         overflow: hidden;
         white-space: nowrap;
         text-overflow: ellipsis;
+
+        & > img,
+        & > svg {
+            flex-shrink: 0;
+            height: 20px;
+            object-fit: contain;
+            margin-right: 4px;
+        }
     }
 
     .EezStudio_PropertiesPanel_Body {
@@ -531,13 +542,12 @@
 }
 
 .EezStudio_ThemedColorInput_DropdownContent {
-    font-size: 0.8rem;
+    background: transparent;
+    border: none;
 
-    padding: 0;
-    margin: 0;
-
-    border-radius: 4px;
-    overflow: hidden;
+    .w-color-chrome {
+        color: #333;
+    }
 }
 
 .EezStudio_ObjectReferenceInput_DropdownButton {
@@ -584,34 +594,30 @@
     margin: 0;
 
     border-radius: 4px;
-    overflow: hidden;
+    overflow: auto;
 
-    & > div {
-        height: 240px;
-        overflow: auto;
-        ul {
-            margin: 0;
-            padding: 5px;
+    & > ul {
+        margin: 0;
+        padding: 5px;
 
-            & > div {
-                > div:nth-child(1) {
-                    margin-top: 5px;
-                    text-transform: uppercase;
-                    font-weight: bold;
-                    font-size: smaller;
-                }
-                > div:nth-child(2) {
-                    margin-left: 20px;
-                }
+        & > div {
+            > div:nth-child(1) {
+                margin-top: 5px;
+                text-transform: uppercase;
+                font-weight: bold;
+                font-size: smaller;
             }
+            > div:nth-child(2) {
+                margin-left: 20px;
+            }
+        }
 
-            li {
-                list-style: none;
-                cursor: pointer;
-                &:hover {
-                    color: @selectionColor;
-                    background-color: @selectionBackgroundColor;
-                }
+        li {
+            list-style: none;
+            cursor: pointer;
+            &:hover {
+                color: @selectionColor;
+                background-color: @selectionBackgroundColor;
             }
         }
     }
@@ -3074,6 +3080,10 @@
                 &.inError {
                     color: @inErrorTextColor;
                     background-color: @inErrorBackgroundColor;
+
+                    .form-text {
+                        color: @inErrorTextColor;
+                    }
                 }
 
                 &.highlighted {
@@ -3154,6 +3164,20 @@
                 textarea.pre {
                     font-family: "EEZ Studio Font Monospace";
                     font-size: 0.72rem;
+                }
+            }
+        }
+    }
+
+    &.EezStudio_PropertyGrid_NoGroups {
+        padding: 5px;
+
+        & > table {
+            & > tbody {
+                & > tr {
+                    & > td:first-child {
+                        padding-left: 0px;
+                    }
                 }
             }
         }
@@ -3737,6 +3761,45 @@
         pre {
             margin: 5px 0;
             user-select: text !important;
+        }
+    }
+}
+
+.EezStudio_PropertyGrid_TipBox {
+    margin: 10px 0;
+    padding: 10px;
+    border-left: 5px solid @tipBoxBorderColor;
+    border-radius: 4px;
+    box-shadow: @componentShadow;
+
+    color: @tipBoxColor;
+    background-color: @tipBoxBackgroundColor;
+
+    .EezStudio_PropertyGrid_TipBox_Description {
+        .EezStudio_PropertyGrid_TipBox_Header {
+            display: flex;
+            align-items: center;
+            font-size: 120%;
+            font-weight: bold;
+            margin-bottom: 10px;
+            & > span {
+                margin-left: 6px;
+            }
+        }
+
+        .EezStudio_PropertyGrid_TipBox_DescriptionText {
+            margin-bottom: 10px;
+        }
+
+        .EezStudio_PropertyGrid_TipBox_Toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 5px;
+            select {
+                width: auto;
+            }
         }
     }
 }

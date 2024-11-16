@@ -324,12 +324,15 @@ export class EditorsStore {
             if (
                 parentNode &&
                 parentNode instanceof FlexLayout.TabSetNode &&
-                ((!activeEditor && parentNode.getSelectedNode() == tab) ||
-                    (parentNode.isActive() &&
-                        parentNode.getSelectedNode() == tab))
+                parentNode.isActive() &&
+                parentNode.getSelectedNode() == tab
             ) {
                 activeEditor = editor;
             }
+        }
+
+        if (!activeEditor) {
+            activeEditor = this.activeEditor;
         }
 
         this.tabIdToEditorMap = tabIdToEditorMap;
@@ -359,6 +362,15 @@ export class EditorsStore {
                             true
                         );
                     }
+                }
+
+                if (
+                    this.projectStore.navigationStore.selectedPanel instanceof
+                    ProjectEditor.FlowEditorClass
+                ) {
+                    this.projectStore.navigationStore.setSelectedPanel(
+                        undefined
+                    );
                 }
             }
         });

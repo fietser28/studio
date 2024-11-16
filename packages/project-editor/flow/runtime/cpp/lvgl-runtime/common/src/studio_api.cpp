@@ -860,12 +860,19 @@ EM_PORT_API(int16_t) lvglGetObjHeight(lv_obj_t *obj) {
     return lv_obj_get_height(obj);
 }
 
-EM_PORT_API(lv_font_t *) lvglLoadFont(const char *font_file_path) {
+EM_PORT_API(lv_font_t *) lvglLoadFont(const char *font_file_path, lv_font_t *fallback_user_font, int32_t fallback_builtin_font) {
+    lv_font_t *font;
 #if LVGL_VERSION_MAJOR >= 9
-    return lv_binfont_create(font_file_path);
+    font = lv_binfont_create(font_file_path);
 #else
-    return lv_font_load(font_file_path);
+    font = lv_font_load(font_file_path);
 #endif
+    if (fallback_user_font) {
+        font->fallback = fallback_user_font;
+    } else if (fallback_builtin_font != -1) {
+        font->fallback = BUILT_IN_FONTS[fallback_builtin_font];
+    }
+    return font;
 }
 
 EM_PORT_API(void) lvglFreeFont(lv_font_t *font) {
@@ -942,9 +949,12 @@ EM_PORT_API(void) lvglSetImgbuttonImageSrc(lv_obj_t *obj, lv_imgbtn_state_t stat
     lv_obj_update_layout(obj);
 }
 
-EM_PORT_API(void) lvglSetKeyboardTextarea(lv_obj_t *obj, lv_obj_t *textarea) {
-    lv_keyboard_set_textarea(obj, textarea);
-    lv_obj_update_layout(obj);
+EM_PORT_API(void) lvglSetKeyboardTextarea(lv_obj_t *obj, int32_t textareaIndex) {
+    lv_obj_t *textarea = getLvglObjectFromIndex(textareaIndex);
+    if (textarea) {
+        lv_keyboard_set_textarea(obj, textarea);
+        lv_obj_update_layout(obj);
+    }
 }
 
 #if LVGL_VERSION_MAJOR >= 9

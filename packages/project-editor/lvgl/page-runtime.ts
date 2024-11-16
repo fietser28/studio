@@ -30,7 +30,8 @@ import type {
 import {
     Project,
     ProjectType,
-    findBitmap
+    findBitmap,
+    findFontByVarName
 } from "project-editor/project/project";
 import {
     getClassesDerivedFrom,
@@ -51,6 +52,7 @@ import {
     LV_ANIM_OFF
 } from "project-editor/lvgl/lvgl-constants";
 import {
+    BUILT_IN_FONTS,
     pad_bottom_property_info,
     pad_left_property_info,
     pad_right_property_info,
@@ -164,17 +166,6 @@ export abstract class LVGLPageRuntime {
         );
     }
 
-    getLvglObjectByName(objectName: string) {
-        return this.project._store.lvglIdentifiers.widgetIdentifiers.global.findIndex(
-            lvglIdentifier => {
-                return (
-                    lvglIdentifier.identifier == objectName &&
-                    lvglIdentifier.widgets.length == 1
-                );
-            }
-        );
-    }
-
     getLvglGroupByName(groupName: string) {
         return this.project.lvglGroups.groups.findIndex(
             group => group.name == groupName
@@ -248,7 +239,32 @@ export abstract class LVGLPageRuntime {
 
             const fontPathStr = this.wasm.allocateUTF8("M:" + fontMemPtr);
 
-            let fontPtr = this.wasm._lvglLoadFont(fontPathStr);
+            let fallbackUserFont = 0;
+            let fallbackBuiltinFont = -1;
+            if (font.lvglFallbackFont) {
+                if (font.lvglFallbackFont.startsWith("ui_font_")) {
+                    const fallbackFont = findFontByVarName(
+                        this.project,
+                        font.lvglFallbackFont
+                    );
+
+                    if (fallbackFont) {
+                        fallbackUserFont = this.getFontPtr(fallbackFont);
+                    }
+                } else if (font.lvglFallbackFont.startsWith("lv_font_")) {
+                    fallbackBuiltinFont = BUILT_IN_FONTS.indexOf(
+                        font.lvglFallbackFont
+                            .slice("lv_font_".length)
+                            .toUpperCase()
+                    );
+                }
+            }
+
+            let fontPtr = this.wasm._lvglLoadFont(
+                fontPathStr,
+                fallbackUserFont,
+                fallbackBuiltinFont
+            );
 
             this.wasm._free(fontPathStr);
 
@@ -1128,13 +1144,22 @@ export class LVGLPageViewerRuntime extends LVGLPageRuntime {
         this.userWidgetsStack.pop();
     }
 
-    nextWidgetIndex = 0;
+    nextWidgetIndex = -1;
 
     override getWidgetIndex(object: LVGLWidget | Page) {
         const identifier = [
-            ...this.userWidgetsStack.map(widget => widget.identifier),
+            ...this.userWidgetsStack.map(
+                widget =>
+                    widget.identifier ||
+                    this.runtime.assetsMap.lvglWidgetGeneratedIdentifiers[
+                        widget.objID
+                    ]
+            ),
             object instanceof ProjectEditor.LVGLWidgetClass
-                ? object.identifier
+                ? object.identifier ||
+                  this.runtime.assetsMap.lvglWidgetGeneratedIdentifiers[
+                      object.objID
+                  ]
                 : object.name
         ]
             .map(identifier =>
@@ -1154,7 +1179,49 @@ export class LVGLPageViewerRuntime extends LVGLPageRuntime {
             return widgetIndex;
         }
 
+        if (this.nextWidgetIndex == -1) {
+            this.nextWidgetIndex = Math.max(
+                ...Object.keys(this.runtime.assetsMap.lvglWidgetIndexes).map(
+                    key => this.runtime.assetsMap.lvglWidgetIndexes[key]
+                )
+            );
+
+            if (this.nextWidgetIndex == -Infinity) {
+                this.nextWidgetIndex = 0;
+            } else {
+                this.nextWidgetIndex++;
+            }
+        }
+
         return this.nextWidgetIndex++;
+    }
+
+    getLvglObjectByName(
+        objectName: string,
+        userWidgetsStack: LVGLUserWidgetWidget[]
+    ) {
+        const identifier = [
+            ...userWidgetsStack.map(
+                widget =>
+                    widget.identifier ||
+                    this.runtime.assetsMap.lvglWidgetGeneratedIdentifiers[
+                        widget.objID
+                    ]
+            ),
+            objectName
+        ]
+            .map(identifier =>
+                identifier
+                    ? getName(
+                          "",
+                          identifier,
+                          NamingConvention.UnderscoreLowerCase
+                      )
+                    : "?"
+            )
+            .join(USER_WIDGET_IDENTIFIER_SEPARATOR);
+
+        return this.runtime.assetsMap.lvglWidgetIndexes[identifier];
     }
 }
 

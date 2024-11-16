@@ -30,7 +30,7 @@ import { DragAndDropManagerClass } from "project-editor/core/dd";
 
 import { ProjectContext } from "project-editor/project/context";
 import { ProjectEditor } from "project-editor/project-editor-interface";
-import { DropFile, Tree } from "project-editor/ui-components/Tree";
+import { Tree } from "project-editor/ui-components/Tree";
 import { SortControl } from "project-editor/ui-components/ListNavigation";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -121,7 +121,7 @@ interface LVGLStylesTreeNavigationProps {
     dragAndDropManager?: DragAndDropManagerClass;
     searchInput?: boolean;
     editable?: boolean;
-    onFilesDrop?: (files: DropFile[]) => void;
+    onFilesDrop?: (files: File[]) => void;
 }
 
 export const LVGLStylesTreeNavigation = observer(
@@ -312,12 +312,12 @@ export const LVGLStylesTreeNavigation = observer(
                 this.treeAdapter.deleteSelection();
             }
         }
-        onFocus() {
+        onFocus = () => {
             const navigationStore = this.context.navigationStore;
             if (isPartOfNavigation(this.props.navigationObject)) {
                 navigationStore.setSelectedPanel(this);
             }
-        }
+        };
 
         onSearchChange(event: any) {
             this.searchText = ($(event.target).val() as string).trim();
@@ -372,7 +372,7 @@ export const LVGLStylesTreeNavigation = observer(
                     <Tree
                         treeAdapter={this.treeAdapter}
                         tabIndex={0}
-                        onFocus={this.onFocus.bind(this)}
+                        onFocus={this.onFocus}
                         onEditItem={this.editable ? onEditItem : undefined}
                         renderItem={renderItem}
                         onFilesDrop={this.props.onFilesDrop}

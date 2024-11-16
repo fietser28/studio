@@ -242,6 +242,10 @@ export class WasmRuntime extends RemoteRuntime {
             initJSObjectsMap(this.assetsMap, this.wasmModuleId);
         }
 
+        if (this.projectStore.projectTypeTraits.isLVGL) {
+            await preloadAllBitmaps(this.projectStore);
+        }
+
         this.worker = createWasmWorker(
             this.wasmModuleId,
             isDebuggerActive
@@ -279,8 +283,6 @@ export class WasmRuntime extends RemoteRuntime {
         );
 
         if (this.projectStore.projectTypeTraits.isLVGL) {
-            await preloadAllBitmaps(this.projectStore);
-
             this.lgvlPageRuntime = new LVGLPageViewerRuntime(this);
         }
     }
@@ -361,9 +363,9 @@ export class WasmRuntime extends RemoteRuntime {
                 arrayValue.valueType
             );
             if (objectVariableType) {
-                const objectValue = objectVariableType.getValue(
-                    arrayValue.value
-                );
+                const objectValue = objectVariableType.getValue
+                    ? objectVariableType.getValue(arrayValue.value)
+                    : undefined;
                 if (objectValue) {
                     result =
                         objectVariableType.valueFieldDescriptions[
@@ -393,7 +395,8 @@ export class WasmRuntime extends RemoteRuntime {
             );
         } else if (workerToRenderMessage.getLvglObjectByName) {
             return this.lgvlPageRuntime?.getLvglObjectByName(
-                workerToRenderMessage.getLvglObjectByName.name
+                workerToRenderMessage.getLvglObjectByName.name,
+                []
             );
         } else if (workerToRenderMessage.getLvglGroupByName) {
             return this.lgvlPageRuntime?.getLvglGroupByName(
@@ -503,9 +506,11 @@ export class WasmRuntime extends RemoteRuntime {
                         valueType
                     );
                     if (objectVariableType) {
-                        let value = objectVariableType.getValue(
-                            workerToRenderMessage.freeArrayValue.value
-                        );
+                        let value = objectVariableType.getValue
+                            ? objectVariableType.getValue(
+                                  workerToRenderMessage.freeArrayValue.value
+                              )
+                            : undefined;
                         if (value) {
                             objectVariableType.destroyValue(value);
                         }
@@ -867,10 +872,11 @@ export class WasmRuntime extends RemoteRuntime {
                 );
 
                 if (typeof engineValueWithType.value == "object") {
-                    let objectValue =
-                        globalVariable.objectVariableType.getValue(
-                            engineValueWithType.value
-                        );
+                    let objectValue = globalVariable.objectVariableType.getValue
+                        ? globalVariable.objectVariableType.getValue(
+                              engineValueWithType.value
+                          )
+                        : undefined;
                     if (objectValue) {
                         globalVariable.objectVariableType.destroyValue(
                             objectValue
