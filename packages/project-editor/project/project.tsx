@@ -79,6 +79,7 @@ export { ProjectType } from "project-editor/core/object";
 import { isArray } from "eez-studio-shared/util";
 import type { CommandsProtocolType } from "eez-studio-shared/extensions/extension";
 import type { LVGLGroups } from "project-editor/lvgl/groups";
+import { settingsController } from "home/settings";
 
 export * from "project-editor/project/assets";
 export * from "project-editor/project/helper";
@@ -548,7 +549,6 @@ export class ExtensionDirective extends EezObject {
             {
                 name: "extensionName",
                 type: PropertyType.String,
-                disableSpellcheck: true,
 
                 onSelect: async (
                     object: IEezObject,
@@ -2030,6 +2030,14 @@ export class Project extends EezObject {
             LayoutModels.BREAKPOINTS_TAB,
             LayoutModels.COMPONENTS_PALETTE_TAB_ID,
             flowSupport
+        );
+
+        enableTab(
+            this._store.layoutModels.rootEditor,
+            LayoutModels.COMPONENTS_PALETTE_TAB_ID,
+            LayoutModels.COMPONENTS_PALETTE_TAB,
+            LayoutModels.PROPERTIES_TAB_ID,
+            settingsController.showComponentsPaletteInProjectEditor
         );
     }
 

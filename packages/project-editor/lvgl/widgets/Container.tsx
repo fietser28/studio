@@ -4,14 +4,14 @@ import { makeObservable } from "mobx";
 import {
     IMessage,
     MessageType,
-    makeDerivedClassInfo
+    makeDerivedClassInfo,
+    LVGLParts
 } from "project-editor/core/object";
 
 import { ProjectType } from "project-editor/project/project";
 
 import { LVGLPageRuntime } from "project-editor/lvgl/page-runtime";
 import type { LVGLBuild } from "project-editor/lvgl/build";
-import { LVGLParts } from "project-editor/lvgl/lvgl-constants";
 
 import { LVGLTabviewWidget, LVGLTabWidget, LVGLWidget } from "./internal";
 import { getDropdown, getTabview } from "../widget-common";
@@ -62,8 +62,8 @@ export class LVGLContainerWidget extends LVGLWidget {
         defaultValue: {
             left: 0,
             top: 0,
-            width: 100,
-            height: 50,
+            width: 300,
+            height: 200,
             clickableFlag: true
         },
 

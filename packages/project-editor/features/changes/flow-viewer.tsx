@@ -427,7 +427,7 @@ export const Canvas = observer(
             this.buttonsAtDown = event.buttons;
 
             if (this.mouseHandler) {
-                this.mouseHandler.up(this.props.flowContext);
+                this.mouseHandler.up(this.props.flowContext, true);
                 this.mouseHandler = undefined;
             }
 
@@ -442,7 +442,8 @@ export const Canvas = observer(
                     movementX: event.movementX ?? 0,
                     movementY: event.movementY ?? 0,
                     ctrlKey: event.ctrlKey,
-                    shiftKey: event.shiftKey
+                    shiftKey: event.shiftKey,
+                    timeStamp: event.timeStamp
                 };
 
                 this.mouseHandler.down(this.props.flowContext, event);
@@ -465,16 +466,17 @@ export const Canvas = observer(
                         ? this.mouseHandler.lastPointerEvent.movementY
                         : 0,
                     ctrlKey: event.ctrlKey,
-                    shiftKey: event.shiftKey
+                    shiftKey: event.shiftKey,
+                    timeStamp: event.timeStamp
                 };
 
                 this.mouseHandler.move(this.props.flowContext, event);
             }
         };
 
-        onDragEnd(event: PointerEvent) {
+        onDragEnd(event: PointerEvent, cancel: boolean) {
             if (this.mouseHandler) {
-                this.mouseHandler.up(this.props.flowContext);
+                this.mouseHandler.up(this.props.flowContext, cancel);
 
                 this.mouseHandler = undefined;
             }
@@ -772,6 +774,17 @@ class FlowDocument implements IDocument {
         connectionOutput: string,
         targetObjectId: string,
         connectionInput: string
+    ) {}
+
+    connectToNewTarget(
+        sourceObjectId: string,
+        connectionOutput: string,
+        atPoint: Point
+    ) {}
+    connectToNewSource(
+        targetObjectId: string,
+        connectionInput: string,
+        atPoint: Point
     ) {}
 }
 

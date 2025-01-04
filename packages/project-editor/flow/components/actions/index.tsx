@@ -550,7 +550,6 @@ export class EvalJSExprActionComponent extends ActionComponent {
                 type: PropertyType.MultilineText,
                 propertyGridGroup: specificGroup,
                 monospaceFont: true,
-                disableSpellcheck: true,
                 flowProperty: "template-literal"
             }
         ],
@@ -4121,10 +4120,6 @@ const TrixEditor = observer(
         }
 
         componentDidMount(): void {
-            this.setup();
-        }
-
-        componentDidUpdate() {
             this.setup();
         }
 

@@ -1,7 +1,6 @@
 import React from "react";
 import path from "path";
 import { observable, computed, makeObservable } from "mobx";
-import { zipObject, map } from "lodash";
 
 import { isValid, strToColor16 } from "eez-studio-shared/color";
 
@@ -30,7 +29,8 @@ import {
     propertyNotSetMessage,
     createObject,
     isEezObjectArray,
-    getAncestorOfType
+    getAncestorOfType,
+    getClassInfo
 } from "project-editor/store";
 import {
     isDashboardProject,
@@ -65,41 +65,7 @@ import {
 import { checkExpression } from "project-editor/flow/expression";
 import type { IFlowContext } from "project-editor/flow/flow-interfaces";
 
-export type BorderRadiusSpec = {
-    topLeftX: number;
-    topLeftY: number;
-    topRightX: number;
-    topRightY: number;
-    bottomLeftX: number;
-    bottomLeftY: number;
-    bottomRightX: number;
-    bottomRightY: number;
-};
-
 ////////////////////////////////////////////////////////////////////////////////
-
-export function isWidgetParentOfStyle(object: IEezObject) {
-    while (true) {
-        if (object instanceof ProjectEditor.ComponentClass) {
-            return true;
-        }
-        if (!getParent(object)) {
-            return false;
-        }
-        object = getParent(object);
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-function openCssHelpPage(cssAttributeName: string) {
-    const { shell } = require("electron");
-    shell.openExternal(
-        `https://developer.mozilla.org/en-US/docs/Web/CSS/${
-            cssAttributeName != "css" ? cssAttributeName : ""
-        }`
-    );
-}
 
 const propertyMenu = (props: PropertyProps): Electron.MenuItem[] => {
     let menuItems: Electron.MenuItem[] = [];
@@ -155,6 +121,14 @@ const backgroundColorPropertyMenu = (
 
 ////////////////////////////////////////////////////////////////////////////////
 
+const conditionalStyleConditionProperty = makeExpressionProperty(
+    {
+        name: "condition",
+        type: PropertyType.MultilineText
+    },
+    "boolean"
+);
+
 export class ConditionalStyle extends EezObject {
     style: string;
     condition: string;
@@ -165,7 +139,8 @@ export class ConditionalStyle extends EezObject {
                 name: "style",
                 type: PropertyType.ObjectReference,
                 referencedObjectCollectionPath: "allStyles"
-            }
+            },
+            conditionalStyleConditionProperty
         ],
         check: (
             conditionalStyleItem: ConditionalStyle,
@@ -800,7 +775,6 @@ const blinkProperty: PropertyInfo = {
 const cssProperty: PropertyInfo = {
     name: "css",
     displayName: "Additional CSS",
-    propertyNameAbove: true,
     type: PropertyType.CSS,
     cssAttributeName: "css",
     nonInheritable: true,
@@ -812,7 +786,6 @@ export const dynamicCssProperty = makeExpressionProperty(
     {
         name: "dynamicCSS",
         displayName: "Dynamic CSS",
-        propertyNameAbove: true,
         type: PropertyType.MultilineText,
         disabled: (object: IEezObject, propertyInfo: PropertyInfo) => {
             if (isNotDashboardProject(object)) {
@@ -835,7 +808,6 @@ export const dynamicCssProperty = makeExpressionProperty(
 const cssPreviewProperty: PropertyInfo = {
     name: "cssPreview",
     displayName: "CSS preview",
-    propertyNameAbove: true,
     type: PropertyType.CSS,
     disabled: isNotDashboardProject,
     readOnlyInPropertyGrid: true,
@@ -888,10 +860,10 @@ const properties = [
     alwaysBuildProperty
 ];
 
-const propertiesMap: { [propertyName: string]: PropertyInfo } = zipObject(
-    map(properties, p => p.name),
-    map(properties, p => p)
-) as any;
+const propertiesMap: { [propertyName: string]: PropertyInfo } = {};
+for (const property of properties) {
+    propertiesMap[property.name] = property;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -2218,8 +2190,7 @@ export class Style extends EezObject {
                             `${getKey(this)}.${
                                 conditionalStylesProperty.name
                             }[${index}].${
-                                ProjectEditor.conditionalStyleConditionProperty
-                                    .name
+                                conditionalStyleConditionProperty.name
                             }`
                         ) ?? false;
 
@@ -2298,6 +2269,27 @@ export class Style extends EezObject {
 registerClass("Style", Style);
 
 ////////////////////////////////////////////////////////////////////////////////
+
+function isWidgetParentOfStyle(object: IEezObject) {
+    while (true) {
+        if (object instanceof ProjectEditor.ComponentClass) {
+            return true;
+        }
+        if (!getParent(object)) {
+            return false;
+        }
+        object = getParent(object);
+    }
+}
+
+function openCssHelpPage(cssAttributeName: string) {
+    const { shell } = require("electron");
+    shell.openExternal(
+        `https://developer.mozilla.org/en-US/docs/Web/CSS/${
+            cssAttributeName != "css" ? cssAttributeName : ""
+        }`
+    );
+}
 
 function getInheritedValue(
     styleObject: Style,
@@ -2381,6 +2373,45 @@ export function getStyleProperty(
     );
 
     return inheritedValue?.value;
+}
+
+export function getAdditionalStyleFlowProperties(widget: Widget) {
+    const additionalProperties: PropertyInfo[] = [];
+
+    const classInfo = getClassInfo(widget);
+
+    for (const propertyInfo of classInfo.properties) {
+        if (
+            propertyInfo.type == PropertyType.Object &&
+            propertyInfo.typeClass == Style
+        ) {
+            const style = (widget as any)[propertyInfo.name] as Style;
+
+            if (style.conditionalStyles) {
+                for (
+                    let index = 0;
+                    index < style.conditionalStyles.length;
+                    index++
+                ) {
+                    additionalProperties.push(
+                        Object.assign({}, conditionalStyleConditionProperty, {
+                            name: `${propertyInfo.name}.${conditionalStylesProperty.name}[${index}].${conditionalStyleConditionProperty.name}`
+                        })
+                    );
+                }
+            }
+
+            if (style.dynamicCSS) {
+                additionalProperties.push(
+                    Object.assign({}, dynamicCssProperty, {
+                        name: `${propertyInfo.name}.${dynamicCssProperty.name}`
+                    })
+                );
+            }
+        }
+    }
+
+    return additionalProperties;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

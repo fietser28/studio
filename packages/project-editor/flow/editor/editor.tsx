@@ -583,7 +583,7 @@ export const Canvas = observer(
             this.buttonsAtDown = event.buttons;
 
             if (this.mouseHandler) {
-                this.mouseHandler.up(this.props.flowContext);
+                this.mouseHandler.up(this.props.flowContext, true);
                 this.mouseHandler = undefined;
             }
 
@@ -646,7 +646,8 @@ export const Canvas = observer(
                     movementX: event.movementX ?? 0,
                     movementY: event.movementY ?? 0,
                     ctrlKey: event.ctrlKey,
-                    shiftKey: event.shiftKey
+                    shiftKey: event.shiftKey,
+                    timeStamp: event.timeStamp
                 };
 
                 this.mouseHandler.down(this.props.flowContext, event);
@@ -669,18 +670,19 @@ export const Canvas = observer(
                         ? this.mouseHandler.lastPointerEvent.movementY
                         : 0,
                     ctrlKey: event.ctrlKey,
-                    shiftKey: event.shiftKey
+                    shiftKey: event.shiftKey,
+                    timeStamp: event.timeStamp
                 };
 
                 this.mouseHandler.move(this.props.flowContext, event);
             }
         };
 
-        onDragEnd(event: PointerEvent) {
+        onDragEnd(event: PointerEvent, cancel: boolean) {
             let preventContextMenu = false;
 
             if (this.mouseHandler) {
-                this.mouseHandler.up(this.props.flowContext);
+                this.mouseHandler.up(this.props.flowContext, cancel);
 
                 if (this.mouseHandler instanceof PanMouseHandler) {
                     if (pointDistance(this.mouseHandler.totalMovement) > 10) {
@@ -774,11 +776,15 @@ export const Canvas = observer(
 
                     setTimeout(() => {
                         const menu = context.document.createContextMenu(
-                            context.viewState.selectedObjects
+                            context.viewState.selectedObjects,
+                            { atPoint: point }
                         );
                         if (menu) {
                             if (this.mouseHandler) {
-                                this.mouseHandler.up(this.props.flowContext);
+                                this.mouseHandler.up(
+                                    this.props.flowContext,
+                                    true
+                                );
                                 this.mouseHandler = undefined;
                             }
 

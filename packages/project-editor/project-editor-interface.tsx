@@ -100,13 +100,13 @@ import type {
 
 import type { Style } from "project-editor/features/style/style";
 import type { evalProperty } from "project-editor/flow/helper";
-import type { PropertyInfo } from "project-editor/core/object";
 import type { migrateLvglVersion } from "project-editor/lvgl/migrate";
 import type { FlowTabState } from "project-editor/flow/flow-tab-state";
 import type { Color } from "project-editor/features/style/theme";
 import type { UserProperty } from "project-editor/flow/user-property";
 import type { LVGLActionComponent } from "project-editor/lvgl/actions";
 import type { FlowEditor } from "project-editor/flow/editor/editor";
+import type { newComponentMenuItem } from "project-editor/flow/editor/ComponentsPalette";
 import type { LVGLSpinboxWidget } from "./lvgl/widgets/Spinbox";
 
 export interface IProjectEditor {
@@ -192,10 +192,10 @@ export interface IProjectEditor {
     makeExpressionProperty: typeof makeExpressionProperty;
     evalProperty: typeof evalProperty;
     checkProperty: typeof checkProperty;
-    conditionalStyleConditionProperty: PropertyInfo;
     FlowTabStateClass: typeof FlowTabState;
     BuildFileClass: typeof BuildFile;
     FlowEditorClass: typeof FlowEditor;
+    newComponentMenuItem: typeof newComponentMenuItem;
 }
 
 export const ProjectEditor: IProjectEditor = {} as any;

@@ -12,7 +12,7 @@ import { getThemedColor } from "project-editor/features/style/theme";
 
 import { ProjectContext } from "project-editor/project/context";
 import { settingsController } from "home/settings";
-import { action, observable, makeObservable } from "mobx";
+import { action, observable, makeObservable, runInAction } from "mobx";
 import { closest } from "eez-studio-shared/dom";
 import tinycolor from "tinycolor2";
 
@@ -34,6 +34,20 @@ export const ThemedColorInput = observer(
         dropDownOpen: boolean | undefined = undefined;
         dropDownLeft = 0;
         dropDownTop = 0;
+
+        colorHSV: any;
+
+        constructor(props: any) {
+            super(props);
+
+            makeObservable(this, {
+                dropDownOpen: observable,
+                dropDownLeft: observable,
+                dropDownTop: observable,
+                setDropDownOpen: action,
+                colorHSV: observable
+            });
+        }
 
         onDragOver = (event: React.DragEvent) => {
             event.preventDefault();
@@ -70,17 +84,6 @@ export const ThemedColorInput = observer(
         onChangeColor = (color: string, completed: boolean) => {
             this.props.onChange(color);
         };
-
-        constructor(props: any) {
-            super(props);
-
-            makeObservable(this, {
-                dropDownOpen: observable,
-                dropDownLeft: observable,
-                dropDownTop: observable,
-                setDropDownOpen: action
-            });
-        }
 
         setDropDownOpen(open: boolean) {
             if (this.dropDownOpen === false) {
@@ -126,10 +129,15 @@ export const ThemedColorInput = observer(
             if (this.dropDownOpen) {
                 const rectButton = buttonEl.getBoundingClientRect();
 
-                const DROP_DOWN_WIDTH = 280;
+                const DROP_DOWN_WIDTH = 230;
+                const DROP_DOWN_HEIGHT = 268;
 
                 this.dropDownLeft = rectButton.right - DROP_DOWN_WIDTH;
-                this.dropDownTop = rectButton.bottom;
+
+                this.dropDownTop = rectButton.bottom - 9;
+                if (this.dropDownTop + DROP_DOWN_HEIGHT > window.innerHeight) {
+                    this.dropDownTop = window.innerHeight - DROP_DOWN_HEIGHT;
+                }
             }
         });
 
@@ -186,9 +194,20 @@ export const ThemedColorInput = observer(
                     }}
                 >
                     <Chrome
-                        color={color}
+                        color={
+                            this.dropDownOpen && this.colorHSV
+                                ? this.colorHSV
+                                : color
+                        }
                         showAlpha={false}
-                        onChange={color => this.onChangeColor(color.hex, false)}
+                        onChange={color => {
+                            runInAction(() => {
+                                this.colorHSV = color.hsv;
+                            });
+
+                            this.onChangeColor(color.hex, false);
+                        }}
+                        placement={"" as any}
                     />
                 </div>,
                 document.body

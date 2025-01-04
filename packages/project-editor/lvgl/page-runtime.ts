@@ -123,6 +123,10 @@ export abstract class LVGLPageRuntime {
 
     beginUserWidget(widget: LVGLUserWidgetWidget) {}
 
+    get isInsideUserWidget() {
+        return false;
+    }
+
     endUserWidget() {}
 
     getWidgetIndex(object: LVGLWidget | Page) {
@@ -319,7 +323,7 @@ export abstract class LVGLPageRuntime {
                 //runtime.wasm._lvglDeleteObject(page._lvglObj);
                 page._lvglObj = undefined;
 
-                page._lvglWidgetsIncludingUserWidgets.forEach(
+                page._lvglWidgets.forEach(
                     widget => (widget._lvglObj = undefined)
                 );
             }
@@ -442,7 +446,7 @@ export abstract class LVGLPageRuntime {
     }
 
     getThemedColor(colorValue: string) {
-        if (colorValue.startsWith("#")) {
+        if (typeof colorValue != "string" || colorValue.startsWith("#")) {
             return { colorValue, isFromTheme: false };
         }
 
@@ -615,7 +619,7 @@ export class LVGLPageEditorRuntime extends LVGLPageRuntime {
                     try {
                         // set all _lvglObj to undefined
                         runInAction(() => {
-                            this.page._lvglWidgetsIncludingUserWidgets.forEach(
+                            this.page._lvglWidgets.forEach(
                                 widget => (widget._lvglObj = undefined)
                             );
                         });
@@ -1140,6 +1144,10 @@ export class LVGLPageViewerRuntime extends LVGLPageRuntime {
         this.userWidgetsStack.push(widget);
     }
 
+    override get isInsideUserWidget() {
+        return this.userWidgetsStack.length > 0;
+    }
+
     override endUserWidget() {
         this.userWidgetsStack.pop();
     }
@@ -1313,6 +1321,8 @@ export class LVGLStylesEditorRuntime extends LVGLPageRuntime {
                 10
             );
 
+        this.lvglWidgetsMap.set(lvglScreenWidget.type, lvglScreenWidget);
+
         for (const component of lvglScreenWidget.children) {
             this.lvglWidgetsMap.set(component.type, component);
         }
@@ -1375,7 +1385,7 @@ export class LVGLStylesEditorRuntime extends LVGLPageRuntime {
 
                     // set all _lvglObj to undefined
                     runInAction(() => {
-                        this.page._lvglWidgetsIncludingUserWidgets.forEach(
+                        this.page._lvglWidgets.forEach(
                             widget => (widget._lvglObj = undefined)
                         );
                     });
@@ -1418,26 +1428,12 @@ export class LVGLStylesEditorRuntime extends LVGLPageRuntime {
                                 lvglWidget._useStyleForStylePreview = "";
                                 lvglWidget.states = "";
 
-                                flags.push("HIDDEN");
+                                if (lvglWidget != this.page.lvglScreenWidget) {
+                                    flags.push("HIDDEN");
+                                }
                             }
 
                             lvglWidget.widgetFlags = flags.join("|");
-                        }
-
-                        const lvglScreenWidget = this.page.lvglScreenWidget!;
-                        if (
-                            this.selectedStyle &&
-                            this.canvas &&
-                            lvglScreenWidget.type ==
-                                this.selectedStyle.forWidgetType
-                        ) {
-                            lvglScreenWidget._useStyleForStylePreview =
-                                this.selectedStyle.name;
-                            lvglScreenWidget.states =
-                                this.project._store.uiStateStore.lvglState;
-                        } else {
-                            lvglScreenWidget._useStyleForStylePreview = "";
-                            lvglScreenWidget.states = "";
                         }
                     });
 
@@ -1541,9 +1537,7 @@ function getObjects(page: Page) {
     const objects = [];
     objects.push(page._lvglObj!);
 
-    page._lvglWidgetsIncludingUserWidgets.forEach(widget =>
-        objects.push(widget._lvglObj!)
-    );
+    page._lvglWidgets.forEach(widget => objects.push(widget._lvglObj!));
 
     return objects;
 }
@@ -1560,7 +1554,7 @@ function setObjects(
 
         page._lvglObj = objects[index++];
 
-        page._lvglWidgetsIncludingUserWidgets.forEach(
+        page._lvglWidgets.forEach(
             widget => (widget._lvglObj = objects[index++])
         );
     });

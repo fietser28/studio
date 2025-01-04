@@ -44,7 +44,7 @@ export interface IMouseHandler {
     lastPointerEvent: IPointerEvent;
     down(context: IFlowContext, event: IPointerEvent): void;
     move(context: IFlowContext, event: IPointerEvent): void;
-    up(context: IFlowContext): void;
+    up(context: IFlowContext, cancel: boolean): void;
     render?(context: IFlowContext): React.ReactNode;
     onTransformChanged(context: IFlowContext): void;
 }
@@ -56,6 +56,7 @@ export interface IPointerEvent {
     movementY: number;
     ctrlKey: boolean;
     shiftKey: boolean;
+    timeStamp: number;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -91,7 +92,7 @@ export class MouseHandler implements IMouseHandler {
     down(context: IFlowContext, event: IPointerEvent) {
         this.transform = context.viewState.transform;
 
-        this.timeAtDown = new Date().getTime();
+        this.timeAtDown = event.timeStamp;
 
         this.lastOffsetPoint = this.offsetPointAtDown =
             this.transform.pointerEventToOffsetPoint(event);
@@ -106,7 +107,7 @@ export class MouseHandler implements IMouseHandler {
     move(context: IFlowContext, event: IPointerEvent) {
         this.transform = context.viewState.transform;
 
-        this.elapsedTime = new Date().getTime() - this.timeAtDown;
+        this.elapsedTime = event.timeStamp - this.timeAtDown;
 
         let offsetPoint = this.transform.pointerEventToOffsetPoint(event);
 
@@ -135,7 +136,7 @@ export class MouseHandler implements IMouseHandler {
         };
     }
 
-    up(context: IFlowContext) {}
+    up(context: IFlowContext, cancel: boolean) {}
 
     onTransformChanged(context: IFlowContext) {
         const transform = context.viewState.transform;
@@ -282,8 +283,8 @@ export class RubberBandSelectionMouseHandler extends MouseHandler {
         );
     }
 
-    up(context: IFlowContext) {
-        super.up(context);
+    up(context: IFlowContext, cancel: boolean) {
+        super.up(context, cancel);
 
         runInAction(() => {
             this.rubberBendRect = undefined;
@@ -395,12 +396,12 @@ export class DragMouseHandler extends MouseHandlerWithSnapLines {
     move(context: IFlowContext, event: IPointerEvent) {
         super.move(context, event);
 
-        if (this.elapsedTime < 100 && this.distance < 20) {
-            return;
-        }
-
         this.left += this.movement.x / context.viewState.transform.scale;
         this.top += this.movement.y / context.viewState.transform.scale;
+
+        if (this.elapsedTime < 200 && this.distance < 10) {
+            return;
+        }
 
         const { left, top } = this.snapLines.dragSnap(
             this.left,
@@ -465,8 +466,8 @@ export class DragMouseHandler extends MouseHandlerWithSnapLines {
         }
     }
 
-    up(context: IFlowContext) {
-        super.up(context);
+    up(context: IFlowContext, cancel: boolean) {
+        super.up(context, cancel);
 
         if (this.objectNodes) {
             for (let i = 0; i < this.objectNodes.length; ++i) {
@@ -664,8 +665,8 @@ export class ResizeMouseHandler extends MouseHandlerWithSnapLines {
         }
     }
 
-    up(context: IFlowContext) {
-        super.up(context);
+    up(context: IFlowContext, cancel: boolean) {
+        super.up(context, cancel);
 
         context.document.onDragEnd();
     }
@@ -815,16 +816,24 @@ export class NewConnectionLineFromOutputMouseHandler extends MouseHandler {
         }
     }
 
-    up(context: IFlowContext) {
-        super.up(context);
+    up(context: IFlowContext, cancel: boolean) {
+        super.up(context, cancel);
 
-        if (this.target) {
-            context.document.connect(
-                this.sourceObject.id,
-                this.connectionOutput,
-                this.target.objectId,
-                this.target.connectionInput
-            );
+        if (!cancel) {
+            if (this.target) {
+                context.document.connect(
+                    this.sourceObject.id,
+                    this.connectionOutput,
+                    this.target.objectId,
+                    this.target.connectionInput
+                );
+            } else if (this.distance >= 20) {
+                context.document.connectToNewTarget(
+                    this.sourceObject.id,
+                    this.connectionOutput,
+                    context.viewState.transform.offsetToPagePoint(this.endPoint)
+                );
+            }
         }
 
         context.document.onDragEnd();
@@ -1002,16 +1011,26 @@ export class NewConnectionLineFromInputMouseHandler extends MouseHandler {
         }
     }
 
-    up(context: IFlowContext) {
-        super.up(context);
+    up(context: IFlowContext, cancel: boolean) {
+        super.up(context, cancel);
 
-        if (this.source) {
-            context.document.connect(
-                this.source.objectId,
-                this.source.connectionOutput,
-                this.targetObject.id,
-                this.connectionInput
-            );
+        if (!cancel) {
+            if (this.source) {
+                context.document.connect(
+                    this.source.objectId,
+                    this.source.connectionOutput,
+                    this.targetObject.id,
+                    this.connectionInput
+                );
+            } else if (this.distance >= 20) {
+                context.document.connectToNewSource(
+                    this.targetObject.id,
+                    this.connectionInput,
+                    context.viewState.transform.offsetToPagePoint(
+                        this.startPoint
+                    )
+                );
+            }
         }
 
         context.document.onDragEnd();
@@ -1206,45 +1225,47 @@ export class MoveOutputConnectionLinesMouseHandler extends MouseHandler {
         }
     }
 
-    up(context: IFlowContext) {
-        super.up(context);
+    up(context: IFlowContext, cancel: boolean) {
+        super.up(context, cancel);
 
-        const source = this.source;
-        if (source) {
-            const sourceObject = context.projectStore.getObjectFromObjectId(
-                source.objectId
-            ) as Component;
+        if (!cancel) {
+            const source = this.source;
+            if (source) {
+                const sourceObject = context.projectStore.getObjectFromObjectId(
+                    source.objectId
+                ) as Component;
 
-            const changes = {
-                source: sourceObject.objID,
-                output: source.connectionOutput
-            };
+                const changes = {
+                    source: sourceObject.objID,
+                    output: source.connectionOutput
+                };
 
-            if (this.connectionLines.length > 0) {
-                context.projectStore.undoManager.setCombineCommands(true);
+                if (this.connectionLines.length > 0) {
+                    context.projectStore.undoManager.setCombineCommands(true);
 
-                this.connectionLines.forEach(connectionLine => {
-                    if (
-                        context.document.connectionExists(
-                            source.objectId,
-                            source.connectionOutput,
-                            getId(connectionLine.targetComponent!),
-                            connectionLine.input
-                        )
-                    ) {
-                        context.projectStore.deleteObject(connectionLine);
-                    } else {
-                        context.projectStore.updateObject(
-                            connectionLine,
-                            changes
-                        );
-                    }
-                });
+                    this.connectionLines.forEach(connectionLine => {
+                        if (
+                            context.document.connectionExists(
+                                source.objectId,
+                                source.connectionOutput,
+                                getId(connectionLine.targetComponent!),
+                                connectionLine.input
+                            )
+                        ) {
+                            context.projectStore.deleteObject(connectionLine);
+                        } else {
+                            context.projectStore.updateObject(
+                                connectionLine,
+                                changes
+                            );
+                        }
+                    });
 
-                context.projectStore.undoManager.setCombineCommands(false);
+                    context.projectStore.undoManager.setCombineCommands(false);
+                }
+
+                context.viewState.deselectAllObjects();
             }
-
-            context.viewState.deselectAllObjects();
         }
 
         context.document.onDragEnd();
@@ -1448,45 +1469,47 @@ export class MoveInputConnectionLinesMouseHandler extends MouseHandler {
         }
     }
 
-    up(context: IFlowContext) {
-        super.up(context);
+    up(context: IFlowContext, cancel: boolean) {
+        super.up(context, cancel);
 
-        const target = this.target;
-        if (target) {
-            const targetObject = context.projectStore.getObjectFromObjectId(
-                target.objectId
-            ) as Component;
+        if (!cancel) {
+            const target = this.target;
+            if (target) {
+                const targetObject = context.projectStore.getObjectFromObjectId(
+                    target.objectId
+                ) as Component;
 
-            const changes = {
-                target: targetObject.objID,
-                input: target.connectionInput
-            };
+                const changes = {
+                    target: targetObject.objID,
+                    input: target.connectionInput
+                };
 
-            if (this.connectionLines.length > 0) {
-                context.projectStore.undoManager.setCombineCommands(true);
+                if (this.connectionLines.length > 0) {
+                    context.projectStore.undoManager.setCombineCommands(true);
 
-                this.connectionLines.forEach(connectionLine => {
-                    if (
-                        context.document.connectionExists(
-                            getId(connectionLine.sourceComponent!),
-                            connectionLine.output,
-                            target.objectId,
-                            target.connectionInput
-                        )
-                    ) {
-                        context.projectStore.deleteObject(connectionLine);
-                    } else {
-                        context.projectStore.updateObject(
-                            connectionLine,
-                            changes
-                        );
-                    }
-                });
+                    this.connectionLines.forEach(connectionLine => {
+                        if (
+                            context.document.connectionExists(
+                                getId(connectionLine.sourceComponent!),
+                                connectionLine.output,
+                                target.objectId,
+                                target.connectionInput
+                            )
+                        ) {
+                            context.projectStore.deleteObject(connectionLine);
+                        } else {
+                            context.projectStore.updateObject(
+                                connectionLine,
+                                changes
+                            );
+                        }
+                    });
 
-                context.projectStore.undoManager.setCombineCommands(false);
+                    context.projectStore.undoManager.setCombineCommands(false);
+                }
+
+                context.viewState.deselectAllObjects();
             }
-
-            context.viewState.deselectAllObjects();
         }
 
         context.document.onDragEnd();

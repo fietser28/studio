@@ -9,7 +9,6 @@ import {
     isPropertyEnumerable,
     getParent,
     getKey,
-    EezClass,
     isSubclassOf,
     ClassInfo,
     PropertyProps,
@@ -44,6 +43,9 @@ import { confirm } from "project-editor/core/util";
 import type { Flow } from "project-editor/flow/flow";
 
 import { isArray } from "eez-studio-shared/util";
+
+import { getClass, getClassInfo } from "project-editor/core/object";
+export { getClass, getClassInfo } from "project-editor/core/object";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -308,18 +310,6 @@ export function getChildren(parent: IEezObject): IEezObject[] {
     }
 }
 
-export function getClass(object: IEezObject) {
-    if (isArray(object)) {
-        return getPropertyInfo(object).typeClass!;
-    } else {
-        return object.constructor as EezClass;
-    }
-}
-
-export function getClassInfo(object: IEezObject): ClassInfo {
-    return getClass(object).classInfo;
-}
-
 export function getObjectIcon(object: IEezObject) {
     const classInfo = getClassInfo(object);
 
@@ -367,14 +357,6 @@ export function getLabel(object: IEezObject): string {
     }
 
     return getClass(object).name;
-}
-
-export function getPropertiesPanelLabel(object: IEezObject) {
-    const classInfo = getClassInfo(object);
-    if (classInfo.propertiesPanelLabel) {
-        return classInfo.propertiesPanelLabel(object);
-    }
-    return getLabel(object);
 }
 
 export function getListLabel(object: IEezObject, collapsed: boolean) {
@@ -685,13 +667,6 @@ export function extendContextMenu(
     }
 }
 
-export function canAdd(object: IEezObject) {
-    return (
-        (isArrayElement(object) || isArray(object)) &&
-        getClassInfo(object).newItem != undefined
-    );
-}
-
 export function canDuplicate(object: IEezObject) {
     return isArrayElement(object);
 }
@@ -749,6 +724,37 @@ export function canPaste(projectStore: ProjectStore, object: IEezObject) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+export function canAdd(object: IEezObject) {
+    return (
+        (isArrayElement(object) || isArray(object)) &&
+        getClassInfo(object).newItem != undefined
+    );
+}
+
+export function getAddItemName(object: IEezObject) {
+    const parent = isArray(object) ? object : getParent(object);
+    if (!parent) {
+        return null;
+    }
+
+    const project = getProject(parent);
+    if (parent == project.userWidgets) {
+        return "User Widget";
+    }
+    if (parent == project.actions) {
+        return "User Action";
+    }
+    if (getParent(parent) == project.lvglStyles) {
+        return "Style";
+    }
+
+    if (getParent(parent) == project.lvglGroups) {
+        return "Group";
+    }
+
+    return humanize(getClass(parent).name);
+}
 
 export async function addItem(object: IEezObject) {
     const parent = isArray(object) ? object : getParent(object);

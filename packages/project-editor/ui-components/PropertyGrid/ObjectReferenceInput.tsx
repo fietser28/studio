@@ -203,7 +203,6 @@ export const ObjectReferenceInput = observer(
                             })}
                             onChange={this.onSearchChange}
                             onKeyDown={this.onSearchChange}
-                            disableSpellcheck={true}
                         />
                     </div>
                     <div>
@@ -243,11 +242,8 @@ export const ObjectReferenceInput = observer(
                     : "";
 
             return (
-                <>
-                    <div
-                        className="input-group"
-                        style={{ position: "relative" }}
-                    >
+                <div style={{ width: "100%" }}>
+                    <div className="input-group">
                         <input
                             className="form-control"
                             type="text"
@@ -287,7 +283,7 @@ export const ObjectReferenceInput = observer(
                             </div>
                         </div>
                     )}
-                </>
+                </div>
             );
         }
     }

@@ -24,7 +24,8 @@ import {
     IMessage,
     PropertyInfo,
     getProperty,
-    PropertyProps
+    PropertyProps,
+    isPropertyDisabled
 } from "project-editor/core/object";
 import {
     getChildOfObject,
@@ -32,7 +33,8 @@ import {
     propertyNotSetMessage,
     createObject,
     isEezObjectArray,
-    getAncestorOfType
+    getAncestorOfType,
+    findPropertyByNameInObject
 } from "project-editor/store";
 import {
     isDashboardProject,
@@ -404,7 +406,6 @@ export class Variable extends EezObject {
                 expressionIsConstant: true,
                 flowProperty: "input",
                 monospaceFont: true,
-                disableSpellcheck: true,
                 disabled: object => {
                     const project = ProjectEditor.getProject(object);
                     return (
@@ -423,7 +424,8 @@ export class Variable extends EezObject {
                         variable
                     ).projectTypeTraits.isVariableTypeSupportedAsNative(
                         variable.type
-                    )
+                    ),
+                checkboxStyleSwitch: true
             },
             {
                 name: "nativeImplementationInfo",
@@ -447,8 +449,7 @@ export class Variable extends EezObject {
                 type: PropertyType.MultilineText,
                 disabled: object =>
                     isLVGLProject(object) || hasFlowSupport(object),
-                monospaceFont: true,
-                disableSpellcheck: true
+                monospaceFont: true
             },
             {
                 name: "usedIn",
@@ -469,7 +470,8 @@ export class Variable extends EezObject {
                             ProjectEditor.getProjectStore(variable),
                             variable.type
                         )?.editConstructorParams) ||
-                    variable.type == "object:TCPSocket"
+                    variable.type == "object:TCPSocket",
+                checkboxStyleSwitch: true
             },
             {
                 name: "persistedValue",
@@ -486,15 +488,31 @@ export class Variable extends EezObject {
         ],
         icon: VARIABLE_ICON,
         listLabel: (variable: Variable) => {
-            const projectStore = getProjectStore(variable);
-
             return (
                 <>
-                    {projectStore.projectTypeTraits.hasFlowSupport &&
-                        variable.native && <span>[NATIVE] </span>}
-                    {variable.persistent && <span>[PERSISTENT] </span>}
-                    <span>{variable.name} </span>
-                    <em className="font-monospace" style={{ opacity: 0.5 }}>
+                    {!isPropertyDisabled(
+                        variable,
+                        findPropertyByNameInObject(variable, "native")!
+                    ) &&
+                        variable.native && (
+                            <span className="EezStudio_ListLabel_Badge">
+                                NATIVE
+                            </span>
+                        )}
+                    {!isPropertyDisabled(
+                        variable,
+                        findPropertyByNameInObject(variable, "persistent")!
+                    ) &&
+                        variable.persistent && (
+                            <span className="EezStudio_ListLabel_Badge">
+                                PERSISTENT
+                            </span>
+                        )}
+                    <span>{variable.name}</span>
+                    <em
+                        className="font-monospace"
+                        style={{ opacity: 0.5, marginLeft: 8 }}
+                    >
                         {variable.type}
                     </em>
                 </>

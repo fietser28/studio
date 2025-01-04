@@ -78,8 +78,7 @@ import type {
     Page
 } from "project-editor/features/page/page";
 import {
-    conditionalStylesProperty,
-    dynamicCssProperty,
+    getAdditionalStyleFlowProperties,
     Style
 } from "project-editor/features/style/style";
 import type {
@@ -530,8 +529,7 @@ export function makeExpressionProperty(
                     },
                     params
                 ),
-            monospaceFont: true,
-            disableSpellcheck: true
+            monospaceFont: true
         } as Partial<PropertyInfo>,
         propertyInfo
     );
@@ -559,8 +557,7 @@ export function makeAssignableExpressionProperty(
                     },
                     params
                 ),
-            monospaceFont: true,
-            disableSpellcheck: true
+            monospaceFont: true
         } as Partial<PropertyInfo>,
         propertyInfo
     );
@@ -573,8 +570,7 @@ export function makeTemplateLiteralProperty(
         {
             flowProperty: "template-literal",
             expressionType: "string",
-            monospaceFont: true,
-            disableSpellcheck: true
+            monospaceFont: true
         } as Partial<PropertyInfo>,
         propertyInfo
     );
@@ -1744,36 +1740,6 @@ export class Component extends EezObject {
                 hideInDocumentation: "all"
             },
             {
-                name: "alignAndDistribute",
-                type: PropertyType.Any,
-                propertyGridGroup: geometryGroup,
-                computed: true,
-                propertyGridRowComponent: AlignAndDistributePropertyGridUI,
-                skipSearch: true,
-                hideInPropertyGrid: (widget: Widget) => {
-                    if (isWidgetUnderDockingManager(widget)) {
-                        return true;
-                    }
-                    const projectStore = ProjectEditor.getProjectStore(widget);
-                    const propertyGridObjects =
-                        projectStore.navigationStore.propertyGridObjects;
-
-                    if (propertyGridObjects.length < 2) {
-                        return true;
-                    }
-
-                    if (
-                        propertyGridObjects.find(
-                            object => !(object instanceof Component)
-                        )
-                    ) {
-                        return true;
-                    }
-
-                    return false;
-                }
-            },
-            {
                 name: "left",
                 type: PropertyType.Number,
                 propertyGridGroup: geometryGroup,
@@ -1814,6 +1780,36 @@ export class Component extends EezObject {
                 disabled: isActionComponent,
                 hideInPropertyGrid: isWidgetUnderDockingManager,
                 hideInDocumentation: "action"
+            },
+            {
+                name: "alignAndDistribute",
+                type: PropertyType.Any,
+                propertyGridGroup: geometryGroup,
+                computed: true,
+                propertyGridRowComponent: AlignAndDistributePropertyGridUI,
+                skipSearch: true,
+                hideInPropertyGrid: (widget: Widget) => {
+                    if (isWidgetUnderDockingManager(widget)) {
+                        return true;
+                    }
+                    const projectStore = ProjectEditor.getProjectStore(widget);
+                    const propertyGridObjects =
+                        projectStore.navigationStore.propertyGridObjects;
+
+                    if (propertyGridObjects.length < 2) {
+                        return true;
+                    }
+
+                    if (
+                        propertyGridObjects.find(
+                            object => !(object instanceof Component)
+                        )
+                    ) {
+                        return true;
+                    }
+
+                    return false;
+                }
             },
             {
                 name: "centerWidgetUI",
@@ -2937,11 +2933,20 @@ export class Widget extends Component {
                     )) {
                         const eventDef = classInfo.widgetEvents[eventName];
                         if (eventDef.oldName == "action") {
-                            jsObject.eventHandlers.push({
-                                eventName,
-                                handlerType: "action",
-                                action: jsObject.action
-                            });
+                            if (
+                                !jsObject.eventHandlers.find(
+                                    (eventHandler: EventHandler) =>
+                                        eventHandler.eventName == eventName &&
+                                        eventHandler.handlerType == "action" &&
+                                        eventHandler.action == jsObject.action
+                                )
+                            ) {
+                                jsObject.eventHandlers.push({
+                                    eventName,
+                                    handlerType: "action",
+                                    action: jsObject.action
+                                });
+                            }
                             break;
                         }
                     }
@@ -2956,15 +2961,24 @@ export class Widget extends Component {
                         )) {
                             const eventDef = classInfo.widgetEvents[eventName];
                             if (eventDef.oldName == asOutputProperty) {
-                                jsObject.eventHandlers.push({
-                                    eventName,
-                                    handlerType: "flow"
-                                });
-                                wireSourceChanged(
-                                    object,
-                                    asOutputProperty,
-                                    eventName
-                                );
+                                if (
+                                    !jsObject.eventHandlers.find(
+                                        (eventHandler: EventHandler) =>
+                                            eventHandler.eventName ==
+                                                eventName &&
+                                            eventHandler.handlerType == "flow"
+                                    )
+                                ) {
+                                    jsObject.eventHandlers.push({
+                                        eventName,
+                                        handlerType: "flow"
+                                    });
+                                    wireSourceChanged(
+                                        object,
+                                        asOutputProperty,
+                                        eventName
+                                    );
+                                }
                                 break;
                             }
                         }
@@ -3216,52 +3230,7 @@ export class Widget extends Component {
             return !widget.locked && !getTimelineEditorState(widget);
         },
 
-        getAdditionalFlowProperties: (widget: Widget) => {
-            const additionalProperties: PropertyInfo[] = [];
-
-            const classInfo = getClassInfo(widget);
-
-            for (const propertyInfo of classInfo.properties) {
-                if (
-                    propertyInfo.type == PropertyType.Object &&
-                    propertyInfo.typeClass == Style
-                ) {
-                    const style = (widget as any)[propertyInfo.name] as Style;
-
-                    if (style.conditionalStyles) {
-                        for (
-                            let index = 0;
-                            index < style.conditionalStyles.length;
-                            index++
-                        ) {
-                            additionalProperties.push(
-                                Object.assign(
-                                    {},
-                                    ProjectEditor.conditionalStyleConditionProperty,
-                                    {
-                                        name: `${propertyInfo.name}.${conditionalStylesProperty.name}[${index}].${ProjectEditor.conditionalStyleConditionProperty.name}`
-                                    }
-                                )
-                            );
-                        }
-                    }
-
-                    if (style.dynamicCSS) {
-                        additionalProperties.push(
-                            Object.assign(
-                                {},
-                                ProjectEditor.conditionalStyleConditionProperty,
-                                {
-                                    name: `${propertyInfo.name}.${dynamicCssProperty.name}`
-                                }
-                            )
-                        );
-                    }
-                }
-            }
-
-            return additionalProperties;
-        },
+        getAdditionalFlowProperties: getAdditionalStyleFlowProperties,
 
         execute: (context: IDashboardComponentContext) => {
             if (context.getOutputType("@widget")) {

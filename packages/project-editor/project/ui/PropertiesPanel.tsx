@@ -3,12 +3,13 @@ import { computed, makeObservable } from "mobx";
 import { observer } from "mobx-react";
 
 import { ProjectContext } from "project-editor/project/context";
-import { getParent } from "project-editor/core/object";
+import { getParent, IEezObject } from "project-editor/core/object";
 import {
     EezValueObject,
     getAncestorOfType,
+    getClassInfo,
+    getLabel,
     getObjectIcon,
-    getPropertiesPanelLabel,
     isObjectExists
 } from "project-editor/store";
 import { PropertyGrid } from "project-editor/ui-components/PropertyGrid";
@@ -84,10 +85,12 @@ export const PropertiesPanel = observer(
                             readOnly={!!this.context.runtime}
                         />
                         {secondObject && (
-                            <PropertyGrid
-                                objects={[secondObject]}
-                                readOnly={!!this.context.runtime}
-                            />
+                            <div style={{ marginTop: 10 }}>
+                                <PropertyGrid
+                                    objects={[secondObject]}
+                                    readOnly={!!this.context.runtime}
+                                />
+                            </div>
                         )}
                     </div>
                 </div>
@@ -95,3 +98,11 @@ export const PropertiesPanel = observer(
         }
     }
 );
+
+function getPropertiesPanelLabel(object: IEezObject) {
+    const classInfo = getClassInfo(object);
+    if (classInfo.propertiesPanelLabel) {
+        return classInfo.propertiesPanelLabel(object);
+    }
+    return getLabel(object);
+}

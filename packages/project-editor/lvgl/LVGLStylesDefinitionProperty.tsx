@@ -8,7 +8,9 @@ import {
     getClassInfoLvglParts,
     IEezObject,
     PropertyInfo,
-    PropertyProps
+    PropertyProps,
+    LVGLParts,
+    getObjectPropertyDisplayName
 } from "project-editor/core/object";
 import type { Page } from "project-editor/features/page/page";
 import { ProjectEditor } from "project-editor/project-editor-interface";
@@ -31,10 +33,7 @@ import {
 } from "project-editor/lvgl/page-runtime";
 import { ITreeNode, Tree } from "eez-studio-ui/tree";
 import { Checkbox } from "project-editor/ui-components/PropertyGrid/Checkbox";
-import {
-    LVGL_STYLE_STATES,
-    LVGLParts
-} from "project-editor/lvgl/lvgl-constants";
+import { LVGL_STYLE_STATES } from "project-editor/lvgl/lvgl-constants";
 
 type TreeNodeData =
     | {
@@ -501,6 +500,20 @@ export const LVGLStylesDefinitionGroupProperties = observer(
                                 }
                             );
 
+                            const propertyObjects = values.map(
+                                value =>
+                                    new PropertyValueHolder(
+                                        this.context,
+                                        propertyInfo.name,
+                                        value
+                                    )
+                            );
+
+                            const propertyName = getObjectPropertyDisplayName(
+                                propertyObjects[0],
+                                propertyInfo
+                            );
+
                             return (
                                 <div
                                     key={propertyInfo.name}
@@ -583,24 +596,15 @@ export const LVGLStylesDefinitionGroupProperties = observer(
                                                 }}
                                                 readOnly={readOnly}
                                             />
-                                            {" " +
-                                                (propertyInfo.displayName ||
-                                                    humanize(
-                                                        propertyInfo.name
-                                                    ))}
+                                            <span title={propertyName}>
+                                                {" " + propertyName}
+                                            </span>
                                         </label>
                                     </div>
                                     <div className="EezStudio_LVGLStylesDefinition_Value">
                                         <ProjectEditor.Property
                                             propertyInfo={propertyInfo}
-                                            objects={values.map(
-                                                value =>
-                                                    new PropertyValueHolder(
-                                                        this.context,
-                                                        propertyInfo.name,
-                                                        value
-                                                    )
-                                            )}
+                                            objects={propertyObjects}
                                             updateObject={(
                                                 propertyValues: Object
                                             ) => {

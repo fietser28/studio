@@ -168,6 +168,11 @@ export const PageStructure = observer(
         deleteSelection() {
             this.treeAdapter!.deleteSelection();
         }
+        selectAll() {
+            this.treeAdapter!.selectItems(
+                this.treeAdapter!.allRows.map(row => row.item)
+            );
+        }
         onFocus = () => {
             this.context.navigationStore.setSelectedPanel(this);
         };
@@ -428,7 +433,12 @@ export const PageStructure = observer(
                         />
                     </Body>
                 </VerticalHeaderWithBody>
-            ) : null;
+            ) : (
+                <div
+                    className="EezStudio_PageStructure_NoPageSelected"
+                    onContextMenu={e => e.preventDefault()}
+                ></div>
+            );
         }
     }
 );

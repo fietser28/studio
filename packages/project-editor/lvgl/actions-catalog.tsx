@@ -33,20 +33,31 @@ registerAction({
             name: "delay",
             type: "integer",
             helpText: "Delay in milliseconds before the animation starts."
+        },
+        {
+            name: "useStack",
+            type: "boolean",
+            helpText: "Put active screen on the stack."
         }
     ],
     defaults: {
         fadeMode: "FADE_IN",
         speed: 200,
-        delay: 0
+        delay: 0,
+        useStack: true
     },
     label: (
-        [screen, fadeMode, speed, delay],
-        [_1, _2, speedLabel, delayLabel]
+        [screen, fadeMode, speed, delay, useStack],
+        [_1, _2, speedLabel, delayLabel, useStackLabel]
     ) => (
         <>
             {screen} {fadeMode} <i>{speedLabel}</i>={speed} <i>{delayLabel}</i>=
             {delay}
+            {useStack !== "ON" && (
+                <>
+                    <i> {useStackLabel}</i>={useStack}
+                </>
+            )}
         </>
     ),
     helpText: "Change the screen to the specified screen"

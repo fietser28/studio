@@ -593,7 +593,6 @@ export class ProjectEditorTab implements IHomeTab {
             }
 
             if (!this.runMode) {
-                console.log("paste");
                 projectStore.paste();
             }
         };
@@ -623,6 +622,9 @@ export class ProjectEditorTab implements IHomeTab {
                 projectStore.navigationStore.selectedPanel.selectAll();
             }
         };
+        const onToggleComponentsPalette = () => {
+            projectStore.layoutModels.toggleComponentsPalette();
+        };
         const onResetLayoutModels = () => {
             if (!this.runMode) {
                 projectStore.layoutModels.reset();
@@ -645,13 +647,33 @@ export class ProjectEditorTab implements IHomeTab {
                     !(event.target instanceof HTMLInputElement) &&
                     !(event.target instanceof HTMLTextAreaElement)
                 ) {
-                    if (event.ctrlKey) {
-                        if (event.key == "x") {
+                    if (
+                        (event.ctrlKey || event.metaKey) &&
+                        !event.shiftKey &&
+                        !event.altKey
+                    ) {
+                        if (event.key == "z") {
+                            undo();
+                        } else if (event.key == "y") {
+                            redo();
+                        } else if (event.key == "x") {
                             cut();
                         } else if (event.key == "c") {
                             copy();
                         } else if (event.key == "v") {
                             paste();
+                        } else if (event.key == "a") {
+                            event.preventDefault();
+                            selectAll();
+                        }
+                    } else if (
+                        !event.ctrlKey &&
+                        !event.metaKey &&
+                        !event.shiftKey &&
+                        !event.altKey
+                    ) {
+                        if (event.key == "Backspace" || event.key == "Delete") {
+                            deleteSelection();
                         }
                     }
                 }
@@ -675,6 +697,7 @@ export class ProjectEditorTab implements IHomeTab {
         ipcRenderer.on("delete", deleteSelection);
         ipcRenderer.on("select-all", selectAll);
 
+        ipcRenderer.on("toggleComponentsPalette", onToggleComponentsPalette);
         ipcRenderer.on("resetLayoutModels", onResetLayoutModels);
 
         ipcRenderer.on("reload-project", onReloadProject);
@@ -699,6 +722,10 @@ export class ProjectEditorTab implements IHomeTab {
             ipcRenderer.removeListener("delete", deleteSelection);
             ipcRenderer.removeListener("select-all", selectAll);
 
+            ipcRenderer.removeListener(
+                "toggleComponentsPalette",
+                onToggleComponentsPalette
+            );
             ipcRenderer.removeListener(
                 "resetLayoutModels",
                 onResetLayoutModels
