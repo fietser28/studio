@@ -371,6 +371,162 @@ export class DragMouseHandler extends MouseHandlerWithSnapLines {
         });
     }
 
+    getConnectionLineAlignedY(
+        context: IFlowContext,
+        event: IPointerEvent,
+        left: number,
+        top: number
+    ) {
+        if (!event.ctrlKey) {
+            return undefined;
+        }
+
+        const dxMouseDrag = left - this.selectionBoundingRectAtDown.left;
+        const dyMouseDrag = top - this.selectionBoundingRectAtDown.top;
+
+        let foundConnectionLine;
+        let foundLength = 0;
+
+        for (const connectionLine of (context.document.flow.object as Flow)
+            .connectionLines) {
+            const sourceComponentIndex = this.selectedObjects.findIndex(
+                selectedObject =>
+                    selectedObject.object == connectionLine.sourceComponent
+            );
+
+            const targetComponentIndex = this.selectedObjects.findIndex(
+                selectedObject =>
+                    selectedObject.object == connectionLine.targetComponent
+            );
+
+            if (
+                (sourceComponentIndex != -1 && targetComponentIndex != -1) ||
+                (sourceComponentIndex == -1 && targetComponentIndex == -1)
+            ) {
+                continue;
+            }
+
+            let sourceOutputX;
+            let sourceOutputY;
+            let targetInputX;
+            let targetInputY;
+
+            const outputPos =
+                connectionLine.sourceComponent.geometry.outputs[
+                    connectionLine.output
+                ].position;
+
+            const inputPos =
+                connectionLine.targetComponent.geometry.inputs[
+                    connectionLine.input
+                ].position;
+
+            if (sourceComponentIndex != -1) {
+                sourceOutputX =
+                    this.objectPositionsAtDown[sourceComponentIndex].x +
+                    dxMouseDrag +
+                    outputPos.x;
+
+                sourceOutputY =
+                    this.objectPositionsAtDown[sourceComponentIndex].y +
+                    dyMouseDrag +
+                    outputPos.y;
+
+                targetInputX =
+                    connectionLine.targetComponent.geometry.left + inputPos.x;
+
+                targetInputY =
+                    connectionLine.targetComponent.geometry.top + inputPos.y;
+            } else {
+                sourceOutputX =
+                    connectionLine.sourceComponent.geometry.left + outputPos.x;
+
+                sourceOutputY =
+                    connectionLine.sourceComponent.geometry.top + outputPos.y;
+
+                targetInputX =
+                    this.objectPositionsAtDown[targetComponentIndex].x +
+                    dxMouseDrag +
+                    inputPos.x;
+
+                targetInputY =
+                    this.objectPositionsAtDown[targetComponentIndex].y +
+                    dyMouseDrag +
+                    inputPos.y;
+            }
+
+            if (sourceOutputX < targetInputX) {
+                const dx = targetInputX - sourceOutputX;
+                const dy = targetInputY - sourceOutputY;
+                const length = dx * dx + dy * dy;
+
+                if (!foundConnectionLine || length < foundLength) {
+                    foundConnectionLine = connectionLine;
+                    foundLength = length;
+                }
+            }
+        }
+
+        if (!foundConnectionLine) {
+            return undefined;
+        }
+
+        const sourceComponentIndex = this.selectedObjects.findIndex(
+            selectedObject =>
+                selectedObject.object == foundConnectionLine.sourceComponent
+        );
+
+        if (sourceComponentIndex != -1) {
+            const topTarget = foundConnectionLine.targetComponent.top;
+            const topBounding = this.selectionBoundingRectAtDown.top;
+            const topSource =
+                this.objectPositionsAtDown[sourceComponentIndex].y;
+
+            const sourceOutputY =
+                foundConnectionLine.sourceComponent.geometry.outputs[
+                    foundConnectionLine.output
+                ].position.y;
+
+            const targetInputY =
+                foundConnectionLine.targetComponent.geometry.inputs[
+                    foundConnectionLine.input
+                ].position.y;
+
+            return (
+                topTarget +
+                (topBounding - topSource) -
+                (sourceOutputY - targetInputY)
+            );
+        } else {
+            const targetComponentIndex = this.selectedObjects.findIndex(
+                selectedObject =>
+                    selectedObject.object == foundConnectionLine.targetComponent
+            );
+
+            const topSource = foundConnectionLine.sourceComponent.top;
+
+            const topBounding = this.selectionBoundingRectAtDown.top;
+            const topTarget =
+                this.objectPositionsAtDown[targetComponentIndex].y;
+
+            const sourceOutputY =
+                foundConnectionLine.sourceComponent.geometry.outputs[
+                    foundConnectionLine.output
+                ].position.y;
+
+            const targetInputY =
+                foundConnectionLine.targetComponent.geometry.inputs[
+                    foundConnectionLine.input
+                ].position.y;
+
+            return (
+                topSource +
+                (topBounding - topTarget) -
+                (targetInputY - sourceOutputY)
+            );
+        }
+    }
+
     down(context: IFlowContext, event: IPointerEvent) {
         super.down(context, event);
 
@@ -403,12 +559,22 @@ export class DragMouseHandler extends MouseHandlerWithSnapLines {
             return;
         }
 
-        const { left, top } = this.snapLines.dragSnap(
+        let { left, top } = this.snapLines.dragSnap(
             this.left,
             this.top,
             this.selectionBoundingRectAtDown.width,
             this.selectionBoundingRectAtDown.height
         );
+
+        const connectionLineAlignedY = this.getConnectionLineAlignedY(
+            context,
+            event,
+            left,
+            top
+        );
+        if (connectionLineAlignedY) {
+            top = connectionLineAlignedY;
+        }
 
         const viewState = context.viewState;
 

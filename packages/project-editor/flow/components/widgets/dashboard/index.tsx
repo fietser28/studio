@@ -4,7 +4,6 @@ import {
     makeObservable,
     computed,
     runInAction,
-    IReactionDisposer,
     action
 } from "mobx";
 import classNames from "classnames";
@@ -309,28 +308,16 @@ const TextInputWidgetInput = observer(
         password: boolean;
         iterators: number[];
     }> {
-        ref = React.createRef<HTMLInputElement>();
-        cursor: number | null = null;
+        inputElement = React.createRef<HTMLInputElement>();
+        latestFlowValue: any;
+        inputValue: any;
 
         constructor(props: any) {
             super(props);
 
             makeObservable(this, {
-                cursor: observable
+                inputValue: observable
             });
-        }
-
-        setSelectionRange() {
-            const input = this.ref.current;
-            if (input) input.setSelectionRange(this.cursor, this.cursor);
-        }
-
-        componentDidMount() {
-            this.setSelectionRange();
-        }
-
-        componentDidUpdate() {
-            this.setSelectionRange();
         }
 
         handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -354,13 +341,13 @@ const TextInputWidgetInput = observer(
         onChange = (event: React.ChangeEvent<HTMLInputElement>) => {
             const { flowContext, textInputWidget, iterators } = this.props;
 
+            runInAction(() => {
+                this.inputValue = event.target.value;
+            });
+
             const flowState = flowContext.flowState as FlowState;
             if (flowState) {
-                runInAction(() => {
-                    this.cursor = event.target.selectionStart;
-                });
-
-                const value = event.target.value;
+                const value = this.inputValue;
 
                 if (this.props.textInputWidget.data) {
                     assignProperty(
@@ -402,12 +389,26 @@ const TextInputWidgetInput = observer(
         render() {
             const { value, readOnly, placeholder, password } = this.props;
 
+            if (value != this.latestFlowValue) {
+                this.latestFlowValue = value;
+
+                setTimeout(
+                    action(() => {
+                        this.inputValue = undefined;
+                    })
+                );
+            }
+
             return (
                 <>
                     <input
-                        ref={this.ref}
+                        ref={this.inputElement}
                         type={password ? "password" : "text"}
-                        value={value}
+                        value={
+                            this.inputValue != undefined
+                                ? this.inputValue
+                                : value
+                        }
                         placeholder={placeholder}
                         onChange={this.onChange}
                         onBlur={this.onBlur}
@@ -612,6 +613,10 @@ registerClass("TextInputWidget", TextInputWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+class NumberInputDashboardExecutionState {
+    focus?: () => void;
+}
+
 const NumberInputDashboardWidgetElement = observer(
     class NumberInputDashboardWidgetElement extends React.Component<{
         className: string;
@@ -622,6 +627,10 @@ const NumberInputDashboardWidgetElement = observer(
         disableDefaultTabHandling: boolean;
         iterators: number[];
     }> {
+        inputElement = React.createRef<HTMLInputElement>();
+        latestFlowValue: any;
+        inputValue: any;
+
         constructor(props: any) {
             super(props);
 
@@ -630,17 +639,21 @@ const NumberInputDashboardWidgetElement = observer(
             });
         }
 
-        inputElement = React.createRef<HTMLInputElement>();
-
         componentDidMount() {
             if (this.props.flowContext.flowState && this.inputElement.current) {
                 this.inputElement.current.focus();
             }
-        }
 
-        dispose: IReactionDisposer;
-        latestFlowValue: any;
-        inputValue: any;
+            let executionState =
+                this.props.flowContext.flowState?.getComponentExecutionState<NumberInputDashboardExecutionState>(
+                    this.props.component
+                );
+            if (executionState) {
+                executionState.focus = () => {
+                    this.inputElement.current?.focus();
+                };
+            }
+        }
 
         render() {
             const { flowContext, component } = this.props;
@@ -811,6 +824,18 @@ export class NumberInputDashboardWidget extends Widget {
                 code: 1,
                 paramExpressionType: `struct:${SLIDER_CHANGE_EVENT_STRUCT_NAME}`,
                 oldName: "action"
+            }
+        },
+
+        execute: (context: IDashboardComponentContext) => {
+            Widget.classInfo.execute!(context);
+
+            let executionState =
+                context.getComponentExecutionState<NumberInputDashboardExecutionState>();
+            if (!executionState) {
+                context.setComponentExecutionState<NumberInputDashboardExecutionState>(
+                    new NumberInputDashboardExecutionState()
+                );
             }
         }
     });
@@ -2605,3 +2630,4 @@ import "project-editor/flow/components/widgets/dashboard/embedded-dashboard";
 
 import { assignProperty } from "project-editor/flow/runtime/worker-dashboard-component-context";
 import { guid } from "eez-studio-shared/guid";
+import { IDashboardComponentContext } from "eez-studio-types";

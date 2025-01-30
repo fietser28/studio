@@ -1,3 +1,4 @@
+import path from "path";
 import React from "react";
 import {
     observable,
@@ -122,9 +123,11 @@ import {
     CALL_ACTION_ICON,
     CALL_NATIVE_ACTION_ICON,
     CLIPBOARD_WRITE_ICON,
+    FOCUS_WIDGET_ICON,
     LANGUAGE_ICON,
     LOG_ICON,
     PALETTE_ICON,
+    PLAY_AUDIO_ICON,
     PRINT_TO_PDF_ICON
 } from "project-editor/ui-components/icons";
 import { humanize } from "eez-studio-shared/string";
@@ -2069,6 +2072,107 @@ export class LogActionComponent extends ActionComponent {
         return (
             <div className="body">
                 <pre>{this.value}</pre>
+            </div>
+        );
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+export class PlayAudioActionComponent extends ActionComponent {
+    static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType === ProjectType.DASHBOARD,
+
+        properties: [
+            makeExpressionProperty(
+                {
+                    name: "audioFile",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup
+                },
+                "string"
+            )
+        ],
+        defaultValue: {},
+        icon: PLAY_AUDIO_ICON,
+        componentHeaderColor: "#C9E9D2",
+        execute: (context: IDashboardComponentContext) => {
+            const audioFile = context.evalProperty<string>("audioFile");
+            if (audioFile == undefined) {
+                context.throwError(`Invalid Audio file property`);
+                return;
+            }
+
+            // Create an AudioContext
+            const audioContext = new window.AudioContext();
+
+            // Function to play audio
+            function playAudio(url: string) {
+                fetch(url)
+                    .then(response => response.arrayBuffer())
+                    .then(arrayBuffer =>
+                        audioContext.decodeAudioData(arrayBuffer)
+                    )
+                    .then(audioBuffer => {
+                        const source = audioContext.createBufferSource();
+                        source.buffer = audioBuffer;
+                        source.connect(audioContext.destination);
+                        source.start(0);
+                    })
+                    .catch(error =>
+                        console.error("Error loading audio:", error)
+                    );
+            }
+
+            playAudio(audioFile);
+
+            context.propagateValueThroughSeqout();
+        }
+    });
+
+    audioFile: string;
+
+    override makeEditable() {
+        super.makeEditable();
+
+        makeObservable(this, {
+            audioFile: observable
+        });
+    }
+
+    getInputs() {
+        return [
+            {
+                name: "@seqin",
+                type: "any" as ValueType,
+                isSequenceInput: true,
+                isOptionalInput: true
+            },
+            ...super.getInputs()
+        ];
+    }
+
+    getOutputs() {
+        return [
+            {
+                name: "@seqout",
+                type: "null" as ValueType,
+                isSequenceOutput: true,
+                isOptionalOutput: true
+            },
+            ...super.getOutputs()
+        ];
+    }
+
+    getBody(flowContext: IFlowContext): React.ReactNode {
+        if (!this.audioFile) {
+            return null;
+        }
+
+        return (
+            <div className="body">
+                <pre>{path.basename(this.audioFile)}</pre>
             </div>
         );
     }
@@ -4835,6 +4939,110 @@ export class PrintToPDFActionComponent extends ActionComponent {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+export class FocusWidgetActionComponent extends ActionComponent {
+    static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
+        componentPaletteGroupName: "GUI",
+        properties: [
+            makeExpressionProperty(
+                {
+                    name: "widget",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup
+                },
+                "widget"
+            )
+        ],
+        defaultValue: {},
+        icon: FOCUS_WIDGET_ICON,
+        componentHeaderColor: "#DEB887",
+        execute: (context: IDashboardComponentContext) => {
+            const widget = context.evalProperty<number>("widget");
+            if (widget == undefined) {
+                context.throwError(`Invalid Widget property`);
+                return;
+            }
+
+            const widgetInfo =
+                context.WasmFlowRuntime.getWidgetHandleInfo(widget);
+
+            if (!widgetInfo) {
+                context.throwError(`Invalid Widget handle`);
+                return;
+            }
+
+            const widgetContext = new DashboardComponentContext(
+                context.WasmFlowRuntime,
+                widgetInfo.flowStateIndex,
+                widgetInfo.componentIndex
+            );
+
+            const executionState =
+                widgetContext.getComponentExecutionState<any>();
+
+            if (!executionState) {
+                context.throwError(`Widget not initialized`);
+                return;
+            }
+
+            if (!executionState.focus) {
+                context.throwError(`Widget doesn't support focus`);
+                return;
+            }
+
+            executionState.focus();
+
+            context.propagateValueThroughSeqout();
+        }
+    });
+
+    widget: string;
+
+    override makeEditable() {
+        super.makeEditable();
+
+        makeObservable(this, {
+            widget: observable
+        });
+    }
+
+    getInputs() {
+        return [
+            {
+                name: "@seqin",
+                type: "any" as ValueType,
+                isSequenceInput: true,
+                isOptionalInput: true
+            },
+            ...super.getInputs()
+        ];
+    }
+
+    getOutputs() {
+        return [
+            {
+                name: "@seqout",
+                type: "null" as ValueType,
+                isSequenceOutput: true,
+                isOptionalOutput: true
+            },
+            ...super.getOutputs()
+        ];
+    }
+
+    getBody(flowContext: IFlowContext): React.ReactNode {
+        if (!this.widget) {
+            return null;
+        }
+        return (
+            <div className="body">
+                <pre>{this.widget}</pre>
+            </div>
+        );
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 registerClass("StartActionComponent", StartActionComponent);
 registerClass("EndActionComponent", EndActionComponent);
 registerClass("InputActionComponent", InputActionComponent);
@@ -4863,6 +5071,8 @@ registerClass("DateNowActionComponent", DateNowActionComponent);
 registerClass("SortArrayActionComponent", SortArrayActionComponent);
 
 registerClass("LogActionComponent", LogActionComponent);
+
+registerClass("PlayAudioActionComponent", PlayAudioActionComponent);
 
 registerClass("ReadSettingActionComponent", ReadSettingActionComponent);
 registerClass("WriteSettingsActionComponent", WriteSettingsActionComponent);
@@ -4902,3 +5112,5 @@ registerClass("NoopActionComponent", NoopActionComponent);
 registerClass("CommentActionComponent", CommentActionComponent);
 
 registerClass("PrintToPDFActionComponent", PrintToPDFActionComponent);
+
+registerClass("FocusWidgetActionComponent", FocusWidgetActionComponent);
