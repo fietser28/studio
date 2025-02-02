@@ -298,7 +298,7 @@ export class LVGLSpinboxWidget extends LVGLWidget {
 
         const obj = runtime.wasm._lvglCreateSpinbox(
             parentObj,
-            runtime.getWidgetIndex(this),
+            runtime.getCreateWidgetIndex(this),
 
             rect.left,
             rect.top,
